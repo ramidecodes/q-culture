@@ -42,4 +42,4 @@ next-env.d.ts
 .biome
 
 # pnpm
-.pnpm-store
+/.pnpm-store
