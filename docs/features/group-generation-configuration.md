@@ -344,10 +344,190 @@ export function GroupingConfigForm({
 - Cannot change after groups generated
 - Workshop must be in valid state (not closed)
 
+## Visualization Requirements
+
+The group generation configuration feature provides a framework preview visualization that helps facilitators understand the implications of their framework choice before generating groups.
+
+### Framework Preview Visualization
+
+**Purpose**: Help facilitators understand how different frameworks will affect grouping by showing cultural dimension patterns of their participants
+
+**Visualization Components**:
+
+1. **Framework Dimension Overview**
+   - Shows which dimensions are included in each framework
+   - Lewis: 3 dimensions (Linear-Active, Multi-Active, Reactive)
+   - Hall: 3 dimensions (Context, Time, Space)
+   - Hofstede: 6 dimensions (Power Distance, Individualism, Masculinity, Uncertainty Avoidance, Long-term Orientation, Indulgence)
+   - Combined: All dimensions from all frameworks
+   - Visual indicator of dimension count and types
+
+2. **Participant Cultural Profile Preview**
+   - Radar chart or parallel coordinates showing participant cultural scores
+   - Framework-specific view (updates when framework selection changes)
+   - All participants or sample displayed
+   - Color coding by country
+   - Use case: Understand cultural diversity visible in selected framework
+
+3. **Distance Distribution Preview**
+   - Histogram showing distribution of pairwise distances between participants
+   - Calculated for selected framework
+   - Shows potential for diverse grouping
+   - Can compare distributions across frameworks (side-by-side or overlay)
+   - Use case: Understand how framework choice affects distance patterns
+
+4. **Simulated Grouping Preview** (Optional)
+   - Preview of potential group assignments using selected framework
+   - Shows how groups might look with current participant set
+   - Not saved until facilitator confirms
+   - Can regenerate preview to see variations
+   - Use case: Preview grouping results before committing
+
+**Interactive Features**:
+- Framework selection: Radio buttons or visual framework cards
+- Real-time preview: Visualization updates immediately when framework changes
+- Participant filtering: Option to preview with subset of participants
+- Comparison mode: Side-by-side comparison of frameworks (optional)
+- Reset preview: Clear preview and return to default view
+
+### User Flow
+
+1. Facilitator navigates to group generation configuration page
+2. System displays configuration form with framework selection
+3. As facilitator hovers or selects each framework:
+   - Framework preview panel shows:
+     - Dimension overview for that framework
+     - Participant cultural profile visualization
+     - Distance distribution histogram
+4. Facilitator selects framework (preview updates)
+5. Facilitator selects group size
+6. System validates configuration
+7. Optional: Facilitator can click "Preview Groups" to see simulated grouping
+8. Facilitator saves configuration
+9. Preview remains available for review before generating actual groups
+
+### Data Requirements
+
+**Query Requirements**:
+- Fetch all participants for workshop
+- Fetch cultural scores for each participant's country
+- Calculate distance matrix for each framework (for comparison)
+- Optional: Run simulated grouping algorithm for preview
+
+**Real-time Updates**:
+- Framework selection changes trigger immediate preview update
+- Participant additions (if workshop still collecting) update preview
+- Preview is recalculated when needed
+
+**Caching Considerations**:
+- Distance matrices can be pre-computed for all frameworks
+- Preview grouping results can be cached per framework
+- Recalculate when participants change
+
+### Technical Implementation Details
+
+#### Key Files
+
+- `components/grouping-config/framework-preview.tsx` - Framework preview visualization component
+- `components/grouping-config/framework-selector.tsx` - Framework selection with preview
+- `components/grouping-config/preview-visualization.tsx` - Preview visualization container
+- `lib/utils/framework-preview-data.ts` - Prepare data for framework previews
+
+#### Dependencies
+
+- `recharts`: Radar charts, histograms for previews
+- `react-force-graph-2d`: Optional preview grouping network graph
+- `d3-scale-chromatic`: Color schemes
+
+#### Preview Data Preparation
+
+```typescript
+// lib/utils/framework-preview-data.ts
+export async function prepareFrameworkPreview(
+  workshopId: string,
+  framework: Framework
+): Promise<FrameworkPreview> {
+  const participants = await getWorkshopParticipants(workshopId);
+  const participantsWithScores = await Promise.all(
+    participants.map(async (p) => ({
+      ...p,
+      culturalScores: await getCountryCulturalData(p.countryCode),
+    }))
+  );
+
+  const distanceMatrix = generateDistanceMatrix(
+    participantsWithScores,
+    framework
+  );
+
+  const distances = extractAllDistances(distanceMatrix);
+
+  return {
+    framework,
+    dimensionCount: getDimensionCount(framework),
+    participantProfiles: transformToProfileData(participantsWithScores, framework),
+    distanceDistribution: calculateDistanceDistribution(distances),
+    previewGroups: framework === "combined" ? null : simulateGrouping(participantsWithScores, framework),
+  };
+}
+
+function extractAllDistances(
+  matrix: Map<string, Map<string, number>>
+): number[] {
+  const distances: number[] = [];
+  for (const [, row] of matrix) {
+    for (const [, distance] of row) {
+      if (distance > 0) {
+        distances.push(distance);
+      }
+    }
+  }
+  return distances;
+}
+```
+
+### Performance Considerations
+
+- Pre-compute distance matrices for all frameworks on page load
+- Lazy load preview grouping simulation (only when requested)
+- Memoize preview calculations
+- Debounce framework switching if needed
+- Cache preview data until participants change
+
+### Accessibility
+
+- Screen reader support: Descriptive text for framework options and previews
+- Keyboard navigation: Tab through framework options, arrow keys for previews
+- High contrast mode: Framework selection clearly distinguishable
+- Text alternatives: Framework information available as text descriptions
+- Tooltip information: Framework descriptions on hover/focus
+
+### Visualization Acceptance Criteria
+
+- Framework preview updates immediately when framework selection changes
+- Participant cultural profile visualization is accurate for selected framework
+- Distance distribution histogram correctly shows distance patterns
+- Preview grouping (if implemented) generates valid group assignments
+- Framework comparison (if implemented) shows meaningful differences
+- Performance acceptable: Preview renders in <1 second
+- Preview is accessible (keyboard, screen reader)
+- Framework descriptions are clear and helpful
+- Preview helps facilitators make informed framework choices
+
+### Integration with Other Features
+
+- **Cultural Reference Data**: Uses cultural scores for previews
+- **Cultural Distance Computation**: Uses distance calculation logic
+- **Group Assignment**: Preview uses same grouping algorithm
+- **Participant Collection Overview**: Links from participant list to configuration
+
 ## Future Enhancements
 
-- Custom framework weighting (for combined option)
-- Preview of grouping strategy before generation
-- Historical configuration tracking
-- Recommended configurations based on participant count
-- Advanced options (gender balance, etc.)
+- Custom framework weighting (for combined option) with preview
+- Advanced preview options (simulated grouping with different algorithms)
+- Historical configuration tracking with visualization comparisons
+- Recommended configurations based on participant count and distribution
+- Advanced options (gender balance, etc.) with preview
+- Side-by-side framework comparison mode
+- Animated transition showing how framework choice affects grouping
+- Framework recommendation engine with visual explanations

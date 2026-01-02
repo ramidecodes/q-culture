@@ -28,11 +28,13 @@ As a system, I need access to standardized cultural dimension scores for each co
 ## Data Requirements
 
 **Countries Table**
+
 - `iso_code` (text, primary key - ISO 3166-1 alpha-2, e.g., "US", "GB")
 - `name` (text, required, e.g., "United States", "United Kingdom")
 - `created_at` (timestamp, default: now)
 
 **Lewis Scores Table**
+
 - `country_code` (text, primary key, foreign key -> countries.iso_code)
 - `linear_active` (numeric, range 0-1, required)
 - `multi_active` (numeric, range 0-1, required)
@@ -40,12 +42,14 @@ As a system, I need access to standardized cultural dimension scores for each co
 - Constraint: linear_active + multi_active + reactive ≈ 1.0
 
 **Hall Scores Table**
+
 - `country_code` (text, primary key, foreign key -> countries.iso_code)
 - `context_high` (numeric, range 0-1, required)
 - `time_polychronic` (numeric, range 0-1, required)
 - `space_private` (numeric, range 0-1, required)
 
 **Hofstede Scores Table**
+
 - `country_code` (text, primary key, foreign key -> countries.iso_code)
 - `power_distance` (numeric, range 0-1, required)
 - `individualism` (numeric, range 0-1, required)
@@ -138,7 +142,10 @@ export const hallScores = pgTable("hall_scores", {
     .primaryKey()
     .references(() => countries.isoCode),
   contextHigh: numeric("context_high", { precision: 4, scale: 3 }).notNull(),
-  timePolychronic: numeric("time_polychronic", { precision: 4, scale: 3 }).notNull(),
+  timePolychronic: numeric("time_polychronic", {
+    precision: 4,
+    scale: 3,
+  }).notNull(),
   spacePrivate: numeric("space_private", { precision: 4, scale: 3 }).notNull(),
 });
 
@@ -146,11 +153,20 @@ export const hofstedeScores = pgTable("hofstede_scores", {
   countryCode: text("country_code")
     .primaryKey()
     .references(() => countries.isoCode),
-  powerDistance: numeric("power_distance", { precision: 4, scale: 3 }).notNull(),
+  powerDistance: numeric("power_distance", {
+    precision: 4,
+    scale: 3,
+  }).notNull(),
   individualism: numeric("individualism", { precision: 4, scale: 3 }).notNull(),
   masculinity: numeric("masculinity", { precision: 4, scale: 3 }).notNull(),
-  uncertaintyAvoidance: numeric("uncertainty_avoidance", { precision: 4, scale: 3 }).notNull(),
-  longTermOrientation: numeric("long_term_orientation", { precision: 4, scale: 3 }).notNull(),
+  uncertaintyAvoidance: numeric("uncertainty_avoidance", {
+    precision: 4,
+    scale: 3,
+  }).notNull(),
+  longTermOrientation: numeric("long_term_orientation", {
+    precision: 4,
+    scale: 3,
+  }).notNull(),
   indulgence: numeric("indulgence", { precision: 4, scale: 3 }).notNull(),
 });
 ```
@@ -160,7 +176,12 @@ export const hofstedeScores = pgTable("hofstede_scores", {
 ```typescript
 // lib/queries/country-queries.ts
 import { db } from "@/lib/db";
-import { countries, lewisScores, hallScores, hofstedeScores } from "@/lib/db/schema";
+import {
+  countries,
+  lewisScores,
+  hallScores,
+  hofstedeScores,
+} from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 
 export async function getAllCountries() {
@@ -181,7 +202,7 @@ export async function getCountryCulturalData(countryCode: string) {
       where: eq(hofstedeScores.countryCode, countryCode),
     }),
   ]);
-  
+
   return { lewis, hall, hofstede };
 }
 ```
@@ -218,7 +239,7 @@ function normalizeLewisScores(
  * Lewis Model country data
  * Scores represent relative dominance of each behavioral type
  * Based on Richard D. Lewis's research from "When Cultures Collide"
- * 
+ *
  * Data source: docs/Quantifying-Culture-data.xlsx
  * Update this array with data from the Excel file as needed
  */
@@ -230,55 +251,253 @@ const lewisData: Array<{
   reactive: number;
 }> = [
   // Linear-Active dominant countries
-  { isoCode: "DE", name: "Germany", linearActive: 0.8, multiActive: 0.15, reactive: 0.05 },
-  { isoCode: "CH", name: "Switzerland", linearActive: 0.85, multiActive: 0.1, reactive: 0.05 },
-  { isoCode: "US", name: "United States", linearActive: 0.7, multiActive: 0.25, reactive: 0.05 },
-  { isoCode: "GB", name: "United Kingdom", linearActive: 0.75, multiActive: 0.2, reactive: 0.05 },
-  { isoCode: "NL", name: "Netherlands", linearActive: 0.8, multiActive: 0.15, reactive: 0.05 },
-  { isoCode: "SE", name: "Sweden", linearActive: 0.75, multiActive: 0.15, reactive: 0.1 },
-  { isoCode: "NO", name: "Norway", linearActive: 0.75, multiActive: 0.15, reactive: 0.1 },
-  { isoCode: "DK", name: "Denmark", linearActive: 0.75, multiActive: 0.15, reactive: 0.1 },
-  { isoCode: "CA", name: "Canada", linearActive: 0.7, multiActive: 0.2, reactive: 0.1 },
-  { isoCode: "AU", name: "Australia", linearActive: 0.7, multiActive: 0.25, reactive: 0.05 },
-  { isoCode: "NZ", name: "New Zealand", linearActive: 0.7, multiActive: 0.25, reactive: 0.05 },
-  
+  {
+    isoCode: "DE",
+    name: "Germany",
+    linearActive: 0.8,
+    multiActive: 0.15,
+    reactive: 0.05,
+  },
+  {
+    isoCode: "CH",
+    name: "Switzerland",
+    linearActive: 0.85,
+    multiActive: 0.1,
+    reactive: 0.05,
+  },
+  {
+    isoCode: "US",
+    name: "United States",
+    linearActive: 0.7,
+    multiActive: 0.25,
+    reactive: 0.05,
+  },
+  {
+    isoCode: "GB",
+    name: "United Kingdom",
+    linearActive: 0.75,
+    multiActive: 0.2,
+    reactive: 0.05,
+  },
+  {
+    isoCode: "NL",
+    name: "Netherlands",
+    linearActive: 0.8,
+    multiActive: 0.15,
+    reactive: 0.05,
+  },
+  {
+    isoCode: "SE",
+    name: "Sweden",
+    linearActive: 0.75,
+    multiActive: 0.15,
+    reactive: 0.1,
+  },
+  {
+    isoCode: "NO",
+    name: "Norway",
+    linearActive: 0.75,
+    multiActive: 0.15,
+    reactive: 0.1,
+  },
+  {
+    isoCode: "DK",
+    name: "Denmark",
+    linearActive: 0.75,
+    multiActive: 0.15,
+    reactive: 0.1,
+  },
+  {
+    isoCode: "CA",
+    name: "Canada",
+    linearActive: 0.7,
+    multiActive: 0.2,
+    reactive: 0.1,
+  },
+  {
+    isoCode: "AU",
+    name: "Australia",
+    linearActive: 0.7,
+    multiActive: 0.25,
+    reactive: 0.05,
+  },
+  {
+    isoCode: "NZ",
+    name: "New Zealand",
+    linearActive: 0.7,
+    multiActive: 0.25,
+    reactive: 0.05,
+  },
+
   // Multi-Active dominant countries
-  { isoCode: "IT", name: "Italy", linearActive: 0.2, multiActive: 0.7, reactive: 0.1 },
-  { isoCode: "ES", name: "Spain", linearActive: 0.25, multiActive: 0.65, reactive: 0.1 },
-  { isoCode: "BR", name: "Brazil", linearActive: 0.2, multiActive: 0.7, reactive: 0.1 },
-  { isoCode: "MX", name: "Mexico", linearActive: 0.25, multiActive: 0.65, reactive: 0.1 },
-  { isoCode: "AR", name: "Argentina", linearActive: 0.25, multiActive: 0.65, reactive: 0.1 },
-  { isoCode: "FR", name: "France", linearActive: 0.4, multiActive: 0.5, reactive: 0.1 },
-  { isoCode: "GR", name: "Greece", linearActive: 0.3, multiActive: 0.6, reactive: 0.1 },
-  { isoCode: "PT", name: "Portugal", linearActive: 0.3, multiActive: 0.6, reactive: 0.1 },
-  { isoCode: "RU", name: "Russia", linearActive: 0.35, multiActive: 0.55, reactive: 0.1 },
-  { isoCode: "PL", name: "Poland", linearActive: 0.4, multiActive: 0.5, reactive: 0.1 },
-  { isoCode: "TR", name: "Turkey", linearActive: 0.3, multiActive: 0.6, reactive: 0.1 },
-  { isoCode: "IN", name: "India", linearActive: 0.3, multiActive: 0.6, reactive: 0.1 },
-  
+  {
+    isoCode: "IT",
+    name: "Italy",
+    linearActive: 0.2,
+    multiActive: 0.7,
+    reactive: 0.1,
+  },
+  {
+    isoCode: "ES",
+    name: "Spain",
+    linearActive: 0.25,
+    multiActive: 0.65,
+    reactive: 0.1,
+  },
+  {
+    isoCode: "BR",
+    name: "Brazil",
+    linearActive: 0.2,
+    multiActive: 0.7,
+    reactive: 0.1,
+  },
+  {
+    isoCode: "MX",
+    name: "Mexico",
+    linearActive: 0.25,
+    multiActive: 0.65,
+    reactive: 0.1,
+  },
+  {
+    isoCode: "AR",
+    name: "Argentina",
+    linearActive: 0.25,
+    multiActive: 0.65,
+    reactive: 0.1,
+  },
+  {
+    isoCode: "FR",
+    name: "France",
+    linearActive: 0.4,
+    multiActive: 0.5,
+    reactive: 0.1,
+  },
+  {
+    isoCode: "GR",
+    name: "Greece",
+    linearActive: 0.3,
+    multiActive: 0.6,
+    reactive: 0.1,
+  },
+  {
+    isoCode: "PT",
+    name: "Portugal",
+    linearActive: 0.3,
+    multiActive: 0.6,
+    reactive: 0.1,
+  },
+  {
+    isoCode: "RU",
+    name: "Russia",
+    linearActive: 0.35,
+    multiActive: 0.55,
+    reactive: 0.1,
+  },
+  {
+    isoCode: "PL",
+    name: "Poland",
+    linearActive: 0.4,
+    multiActive: 0.5,
+    reactive: 0.1,
+  },
+  {
+    isoCode: "TR",
+    name: "Turkey",
+    linearActive: 0.3,
+    multiActive: 0.6,
+    reactive: 0.1,
+  },
+  {
+    isoCode: "IN",
+    name: "India",
+    linearActive: 0.3,
+    multiActive: 0.6,
+    reactive: 0.1,
+  },
+
   // Reactive dominant countries
-  { isoCode: "CN", name: "China", linearActive: 0.15, multiActive: 0.2, reactive: 0.65 },
-  { isoCode: "JP", name: "Japan", linearActive: 0.2, multiActive: 0.15, reactive: 0.65 },
-  { isoCode: "KR", name: "South Korea", linearActive: 0.25, multiActive: 0.2, reactive: 0.55 },
-  { isoCode: "VN", name: "Vietnam", linearActive: 0.15, multiActive: 0.25, reactive: 0.6 },
-  { isoCode: "TH", name: "Thailand", linearActive: 0.2, multiActive: 0.25, reactive: 0.55 },
-  { isoCode: "FI", name: "Finland", linearActive: 0.4, multiActive: 0.2, reactive: 0.4 },
-  { isoCode: "SG", name: "Singapore", linearActive: 0.35, multiActive: 0.25, reactive: 0.4 },
-  { isoCode: "MY", name: "Malaysia", linearActive: 0.25, multiActive: 0.3, reactive: 0.45 },
-  { isoCode: "ID", name: "Indonesia", linearActive: 0.2, multiActive: 0.35, reactive: 0.45 },
-  { isoCode: "PH", name: "Philippines", linearActive: 0.25, multiActive: 0.4, reactive: 0.35 },
+  {
+    isoCode: "CN",
+    name: "China",
+    linearActive: 0.15,
+    multiActive: 0.2,
+    reactive: 0.65,
+  },
+  {
+    isoCode: "JP",
+    name: "Japan",
+    linearActive: 0.2,
+    multiActive: 0.15,
+    reactive: 0.65,
+  },
+  {
+    isoCode: "KR",
+    name: "South Korea",
+    linearActive: 0.25,
+    multiActive: 0.2,
+    reactive: 0.55,
+  },
+  {
+    isoCode: "VN",
+    name: "Vietnam",
+    linearActive: 0.15,
+    multiActive: 0.25,
+    reactive: 0.6,
+  },
+  {
+    isoCode: "TH",
+    name: "Thailand",
+    linearActive: 0.2,
+    multiActive: 0.25,
+    reactive: 0.55,
+  },
+  {
+    isoCode: "FI",
+    name: "Finland",
+    linearActive: 0.4,
+    multiActive: 0.2,
+    reactive: 0.4,
+  },
+  {
+    isoCode: "SG",
+    name: "Singapore",
+    linearActive: 0.35,
+    multiActive: 0.25,
+    reactive: 0.4,
+  },
+  {
+    isoCode: "MY",
+    name: "Malaysia",
+    linearActive: 0.25,
+    multiActive: 0.3,
+    reactive: 0.45,
+  },
+  {
+    isoCode: "ID",
+    name: "Indonesia",
+    linearActive: 0.2,
+    multiActive: 0.35,
+    reactive: 0.45,
+  },
+  {
+    isoCode: "PH",
+    name: "Philippines",
+    linearActive: 0.25,
+    multiActive: 0.4,
+    reactive: 0.35,
+  },
 ];
 
 export async function seedLewisData() {
   console.log("Seeding Lewis Model data...");
-  
+
   for (const country of lewisData) {
     const normalized = normalizeLewisScores(
       country.linearActive,
       country.multiActive,
       country.reactive
     );
-    
+
     // Insert country
     await db
       .insert(countries)
@@ -287,7 +506,7 @@ export async function seedLewisData() {
         name: country.name,
       })
       .onConflictDoNothing();
-    
+
     // Insert Lewis scores
     await db
       .insert(lewisScores)
@@ -305,7 +524,7 @@ export async function seedLewisData() {
         },
       });
   }
-  
+
   console.log(`Seeded ${lewisData.length} countries with Lewis Model data`);
 }
 ```
@@ -322,7 +541,9 @@ import { countries, hallScores } from "@/lib/db/schema";
  */
 function normalizeHallScore(value: number, min: number, max: number): number {
   if (value < min || value > max) {
-    throw new Error(`Hall score ${value} is outside valid range [${min}, ${max}]`);
+    throw new Error(
+      `Hall score ${value} is outside valid range [${min}, ${max}]`
+    );
   }
   return Number(((value - min) / (max - min)).toFixed(3));
 }
@@ -334,7 +555,7 @@ function normalizeHallScore(value: number, min: number, max: number): number {
  * - time_polychronic: 0 = monochronic, 1 = polychronic
  * - space_private: 0 = public space, 1 = private space
  * Based on Edward T. Hall's anthropological research
- * 
+ *
  * Data source: docs/Quantifying-Culture-data.xlsx
  * Update this array with data from the Excel file as needed
  */
@@ -346,60 +567,263 @@ const hallData: Array<{
   spacePrivate: number; // 0-1 scale
 }> = [
   // Low-context, Monochronic, Private space (e.g., US, Germany)
-  { isoCode: "US", name: "United States", contextHigh: 0.2, timePolychronic: 0.2, spacePrivate: 0.8 },
-  { isoCode: "DE", name: "Germany", contextHigh: 0.3, timePolychronic: 0.1, spacePrivate: 0.7 },
-  { isoCode: "GB", name: "United Kingdom", contextHigh: 0.3, timePolychronic: 0.2, spacePrivate: 0.75 },
-  { isoCode: "CA", name: "Canada", contextHigh: 0.25, timePolychronic: 0.2, spacePrivate: 0.8 },
-  { isoCode: "AU", name: "Australia", contextHigh: 0.25, timePolychronic: 0.2, spacePrivate: 0.75 },
-  { isoCode: "NL", name: "Netherlands", contextHigh: 0.3, timePolychronic: 0.15, spacePrivate: 0.7 },
-  { isoCode: "SE", name: "Sweden", contextHigh: 0.35, timePolychronic: 0.15, spacePrivate: 0.65 },
-  { isoCode: "CH", name: "Switzerland", contextHigh: 0.3, timePolychronic: 0.1, spacePrivate: 0.75 },
-  
+  {
+    isoCode: "US",
+    name: "United States",
+    contextHigh: 0.2,
+    timePolychronic: 0.2,
+    spacePrivate: 0.8,
+  },
+  {
+    isoCode: "DE",
+    name: "Germany",
+    contextHigh: 0.3,
+    timePolychronic: 0.1,
+    spacePrivate: 0.7,
+  },
+  {
+    isoCode: "GB",
+    name: "United Kingdom",
+    contextHigh: 0.3,
+    timePolychronic: 0.2,
+    spacePrivate: 0.75,
+  },
+  {
+    isoCode: "CA",
+    name: "Canada",
+    contextHigh: 0.25,
+    timePolychronic: 0.2,
+    spacePrivate: 0.8,
+  },
+  {
+    isoCode: "AU",
+    name: "Australia",
+    contextHigh: 0.25,
+    timePolychronic: 0.2,
+    spacePrivate: 0.75,
+  },
+  {
+    isoCode: "NL",
+    name: "Netherlands",
+    contextHigh: 0.3,
+    timePolychronic: 0.15,
+    spacePrivate: 0.7,
+  },
+  {
+    isoCode: "SE",
+    name: "Sweden",
+    contextHigh: 0.35,
+    timePolychronic: 0.15,
+    spacePrivate: 0.65,
+  },
+  {
+    isoCode: "CH",
+    name: "Switzerland",
+    contextHigh: 0.3,
+    timePolychronic: 0.1,
+    spacePrivate: 0.75,
+  },
+
   // High-context, Polychronic, Public space (e.g., Latin America, Middle East)
-  { isoCode: "BR", name: "Brazil", contextHigh: 0.8, timePolychronic: 0.9, spacePrivate: 0.3 },
-  { isoCode: "MX", name: "Mexico", contextHigh: 0.75, timePolychronic: 0.85, spacePrivate: 0.35 },
-  { isoCode: "AR", name: "Argentina", contextHigh: 0.7, timePolychronic: 0.8, spacePrivate: 0.4 },
-  { isoCode: "ES", name: "Spain", contextHigh: 0.65, timePolychronic: 0.7, spacePrivate: 0.5 },
-  { isoCode: "IT", name: "Italy", contextHigh: 0.7, timePolychronic: 0.75, spacePrivate: 0.45 },
-  { isoCode: "GR", name: "Greece", contextHigh: 0.7, timePolychronic: 0.8, spacePrivate: 0.4 },
-  { isoCode: "TR", name: "Turkey", contextHigh: 0.75, timePolychronic: 0.8, spacePrivate: 0.4 },
-  { isoCode: "IN", name: "India", contextHigh: 0.8, timePolychronic: 0.85, spacePrivate: 0.3 },
-  
+  {
+    isoCode: "BR",
+    name: "Brazil",
+    contextHigh: 0.8,
+    timePolychronic: 0.9,
+    spacePrivate: 0.3,
+  },
+  {
+    isoCode: "MX",
+    name: "Mexico",
+    contextHigh: 0.75,
+    timePolychronic: 0.85,
+    spacePrivate: 0.35,
+  },
+  {
+    isoCode: "AR",
+    name: "Argentina",
+    contextHigh: 0.7,
+    timePolychronic: 0.8,
+    spacePrivate: 0.4,
+  },
+  {
+    isoCode: "ES",
+    name: "Spain",
+    contextHigh: 0.65,
+    timePolychronic: 0.7,
+    spacePrivate: 0.5,
+  },
+  {
+    isoCode: "IT",
+    name: "Italy",
+    contextHigh: 0.7,
+    timePolychronic: 0.75,
+    spacePrivate: 0.45,
+  },
+  {
+    isoCode: "GR",
+    name: "Greece",
+    contextHigh: 0.7,
+    timePolychronic: 0.8,
+    spacePrivate: 0.4,
+  },
+  {
+    isoCode: "TR",
+    name: "Turkey",
+    contextHigh: 0.75,
+    timePolychronic: 0.8,
+    spacePrivate: 0.4,
+  },
+  {
+    isoCode: "IN",
+    name: "India",
+    contextHigh: 0.8,
+    timePolychronic: 0.85,
+    spacePrivate: 0.3,
+  },
+
   // High-context, Monochronic, Mixed space (e.g., Japan, China)
-  { isoCode: "JP", name: "Japan", contextHigh: 0.9, timePolychronic: 0.2, spacePrivate: 0.6 },
-  { isoCode: "CN", name: "China", contextHigh: 0.85, timePolychronic: 0.3, spacePrivate: 0.5 },
-  { isoCode: "KR", name: "South Korea", contextHigh: 0.85, timePolychronic: 0.25, spacePrivate: 0.55 },
-  { isoCode: "VN", name: "Vietnam", contextHigh: 0.8, timePolychronic: 0.4, spacePrivate: 0.4 },
-  { isoCode: "TH", name: "Thailand", contextHigh: 0.8, timePolychronic: 0.5, spacePrivate: 0.35 },
-  { isoCode: "SG", name: "Singapore", contextHigh: 0.7, timePolychronic: 0.4, spacePrivate: 0.6 },
-  { isoCode: "MY", name: "Malaysia", contextHigh: 0.75, timePolychronic: 0.6, spacePrivate: 0.4 },
-  { isoCode: "ID", name: "Indonesia", contextHigh: 0.8, timePolychronic: 0.7, spacePrivate: 0.3 },
-  { isoCode: "PH", name: "Philippines", contextHigh: 0.75, timePolychronic: 0.75, spacePrivate: 0.35 },
-  
+  {
+    isoCode: "JP",
+    name: "Japan",
+    contextHigh: 0.9,
+    timePolychronic: 0.2,
+    spacePrivate: 0.6,
+  },
+  {
+    isoCode: "CN",
+    name: "China",
+    contextHigh: 0.85,
+    timePolychronic: 0.3,
+    spacePrivate: 0.5,
+  },
+  {
+    isoCode: "KR",
+    name: "South Korea",
+    contextHigh: 0.85,
+    timePolychronic: 0.25,
+    spacePrivate: 0.55,
+  },
+  {
+    isoCode: "VN",
+    name: "Vietnam",
+    contextHigh: 0.8,
+    timePolychronic: 0.4,
+    spacePrivate: 0.4,
+  },
+  {
+    isoCode: "TH",
+    name: "Thailand",
+    contextHigh: 0.8,
+    timePolychronic: 0.5,
+    spacePrivate: 0.35,
+  },
+  {
+    isoCode: "SG",
+    name: "Singapore",
+    contextHigh: 0.7,
+    timePolychronic: 0.4,
+    spacePrivate: 0.6,
+  },
+  {
+    isoCode: "MY",
+    name: "Malaysia",
+    contextHigh: 0.75,
+    timePolychronic: 0.6,
+    spacePrivate: 0.4,
+  },
+  {
+    isoCode: "ID",
+    name: "Indonesia",
+    contextHigh: 0.8,
+    timePolychronic: 0.7,
+    spacePrivate: 0.3,
+  },
+  {
+    isoCode: "PH",
+    name: "Philippines",
+    contextHigh: 0.75,
+    timePolychronic: 0.75,
+    spacePrivate: 0.35,
+  },
+
   // Mixed patterns
-  { isoCode: "FR", name: "France", contextHigh: 0.6, timePolychronic: 0.5, spacePrivate: 0.6 },
-  { isoCode: "RU", name: "Russia", contextHigh: 0.7, timePolychronic: 0.6, spacePrivate: 0.5 },
-  { isoCode: "PL", name: "Poland", contextHigh: 0.6, timePolychronic: 0.5, spacePrivate: 0.6 },
-  { isoCode: "PT", name: "Portugal", contextHigh: 0.65, timePolychronic: 0.7, spacePrivate: 0.45 },
-  { isoCode: "FI", name: "Finland", contextHigh: 0.5, timePolychronic: 0.2, spacePrivate: 0.7 },
-  { isoCode: "NO", name: "Norway", contextHigh: 0.4, timePolychronic: 0.2, spacePrivate: 0.7 },
-  { isoCode: "DK", name: "Denmark", contextHigh: 0.4, timePolychronic: 0.2, spacePrivate: 0.7 },
-  { isoCode: "NZ", name: "New Zealand", contextHigh: 0.3, timePolychronic: 0.25, spacePrivate: 0.75 },
+  {
+    isoCode: "FR",
+    name: "France",
+    contextHigh: 0.6,
+    timePolychronic: 0.5,
+    spacePrivate: 0.6,
+  },
+  {
+    isoCode: "RU",
+    name: "Russia",
+    contextHigh: 0.7,
+    timePolychronic: 0.6,
+    spacePrivate: 0.5,
+  },
+  {
+    isoCode: "PL",
+    name: "Poland",
+    contextHigh: 0.6,
+    timePolychronic: 0.5,
+    spacePrivate: 0.6,
+  },
+  {
+    isoCode: "PT",
+    name: "Portugal",
+    contextHigh: 0.65,
+    timePolychronic: 0.7,
+    spacePrivate: 0.45,
+  },
+  {
+    isoCode: "FI",
+    name: "Finland",
+    contextHigh: 0.5,
+    timePolychronic: 0.2,
+    spacePrivate: 0.7,
+  },
+  {
+    isoCode: "NO",
+    name: "Norway",
+    contextHigh: 0.4,
+    timePolychronic: 0.2,
+    spacePrivate: 0.7,
+  },
+  {
+    isoCode: "DK",
+    name: "Denmark",
+    contextHigh: 0.4,
+    timePolychronic: 0.2,
+    spacePrivate: 0.7,
+  },
+  {
+    isoCode: "NZ",
+    name: "New Zealand",
+    contextHigh: 0.3,
+    timePolychronic: 0.25,
+    spacePrivate: 0.75,
+  },
 ];
 
 export async function seedHallData() {
   console.log("Seeding Hall Framework data...");
-  
+
   for (const country of hallData) {
     // Validate scores are in [0,1] range
     if (
-      country.contextHigh < 0 || country.contextHigh > 1 ||
-      country.timePolychronic < 0 || country.timePolychronic > 1 ||
-      country.spacePrivate < 0 || country.spacePrivate > 1
+      country.contextHigh < 0 ||
+      country.contextHigh > 1 ||
+      country.timePolychronic < 0 ||
+      country.timePolychronic > 1 ||
+      country.spacePrivate < 0 ||
+      country.spacePrivate > 1
     ) {
-      throw new Error(`Invalid Hall scores for ${country.name}: scores must be in [0,1] range`);
+      throw new Error(
+        `Invalid Hall scores for ${country.name}: scores must be in [0,1] range`
+      );
     }
-    
+
     // Insert country
     await db
       .insert(countries)
@@ -408,7 +832,7 @@ export async function seedHallData() {
         name: country.name,
       })
       .onConflictDoNothing();
-    
+
     // Insert Hall scores
     await db
       .insert(hallScores)
@@ -426,7 +850,7 @@ export async function seedHallData() {
         },
       });
   }
-  
+
   console.log(`Seeded ${hallData.length} countries with Hall Framework data`);
 }
 ```
@@ -451,10 +875,10 @@ function normalizeHofstedeScore(value: number): number {
 /**
  * Hofstede Framework country data
  * Original scores are on 0-100 scale, normalized to [0,1] for storage
- * 
+ *
  * Data source: docs/Quantifying-Culture-data.xlsx
  * Update this array with data from the Excel file as needed
- * 
+ *
  * Alternative reference: https://www.theculturefactor.com/country-comparison-tool
  */
 const hofstedeData: Array<{
@@ -468,87 +892,386 @@ const hofstedeData: Array<{
   indulgence: number; // 0-100 scale
 }> = [
   // United States
-  { isoCode: "US", name: "United States", powerDistance: 40, individualism: 91, masculinity: 62, uncertaintyAvoidance: 46, longTermOrientation: 26, indulgence: 68 },
+  {
+    isoCode: "US",
+    name: "United States",
+    powerDistance: 40,
+    individualism: 91,
+    masculinity: 62,
+    uncertaintyAvoidance: 46,
+    longTermOrientation: 26,
+    indulgence: 68,
+  },
   // Germany
-  { isoCode: "DE", name: "Germany", powerDistance: 35, individualism: 67, masculinity: 66, uncertaintyAvoidance: 65, longTermOrientation: 83, indulgence: 40 },
+  {
+    isoCode: "DE",
+    name: "Germany",
+    powerDistance: 35,
+    individualism: 67,
+    masculinity: 66,
+    uncertaintyAvoidance: 65,
+    longTermOrientation: 83,
+    indulgence: 40,
+  },
   // United Kingdom
-  { isoCode: "GB", name: "United Kingdom", powerDistance: 35, individualism: 89, masculinity: 66, uncertaintyAvoidance: 35, longTermOrientation: 51, indulgence: 69 },
+  {
+    isoCode: "GB",
+    name: "United Kingdom",
+    powerDistance: 35,
+    individualism: 89,
+    masculinity: 66,
+    uncertaintyAvoidance: 35,
+    longTermOrientation: 51,
+    indulgence: 69,
+  },
   // Japan
-  { isoCode: "JP", name: "Japan", powerDistance: 54, individualism: 46, masculinity: 95, uncertaintyAvoidance: 92, longTermOrientation: 88, indulgence: 42 },
+  {
+    isoCode: "JP",
+    name: "Japan",
+    powerDistance: 54,
+    individualism: 46,
+    masculinity: 95,
+    uncertaintyAvoidance: 92,
+    longTermOrientation: 88,
+    indulgence: 42,
+  },
   // China
-  { isoCode: "CN", name: "China", powerDistance: 80, individualism: 20, masculinity: 66, uncertaintyAvoidance: 30, longTermOrientation: 87, indulgence: 24 },
+  {
+    isoCode: "CN",
+    name: "China",
+    powerDistance: 80,
+    individualism: 20,
+    masculinity: 66,
+    uncertaintyAvoidance: 30,
+    longTermOrientation: 87,
+    indulgence: 24,
+  },
   // France
-  { isoCode: "FR", name: "France", powerDistance: 68, individualism: 71, masculinity: 43, uncertaintyAvoidance: 86, longTermOrientation: 63, indulgence: 48 },
+  {
+    isoCode: "FR",
+    name: "France",
+    powerDistance: 68,
+    individualism: 71,
+    masculinity: 43,
+    uncertaintyAvoidance: 86,
+    longTermOrientation: 63,
+    indulgence: 48,
+  },
   // Italy
-  { isoCode: "IT", name: "Italy", powerDistance: 50, individualism: 76, masculinity: 70, uncertaintyAvoidance: 75, longTermOrientation: 61, indulgence: 30 },
+  {
+    isoCode: "IT",
+    name: "Italy",
+    powerDistance: 50,
+    individualism: 76,
+    masculinity: 70,
+    uncertaintyAvoidance: 75,
+    longTermOrientation: 61,
+    indulgence: 30,
+  },
   // Spain
-  { isoCode: "ES", name: "Spain", powerDistance: 57, individualism: 51, masculinity: 42, uncertaintyAvoidance: 86, longTermOrientation: 48, indulgence: 44 },
+  {
+    isoCode: "ES",
+    name: "Spain",
+    powerDistance: 57,
+    individualism: 51,
+    masculinity: 42,
+    uncertaintyAvoidance: 86,
+    longTermOrientation: 48,
+    indulgence: 44,
+  },
   // Brazil
-  { isoCode: "BR", name: "Brazil", powerDistance: 69, individualism: 38, masculinity: 49, uncertaintyAvoidance: 76, longTermOrientation: 44, indulgence: 59 },
+  {
+    isoCode: "BR",
+    name: "Brazil",
+    powerDistance: 69,
+    individualism: 38,
+    masculinity: 49,
+    uncertaintyAvoidance: 76,
+    longTermOrientation: 44,
+    indulgence: 59,
+  },
   // Mexico
-  { isoCode: "MX", name: "Mexico", powerDistance: 81, individualism: 30, masculinity: 69, uncertaintyAvoidance: 82, longTermOrientation: 24, indulgence: 97 },
+  {
+    isoCode: "MX",
+    name: "Mexico",
+    powerDistance: 81,
+    individualism: 30,
+    masculinity: 69,
+    uncertaintyAvoidance: 82,
+    longTermOrientation: 24,
+    indulgence: 97,
+  },
   // India
-  { isoCode: "IN", name: "India", powerDistance: 77, individualism: 48, masculinity: 56, uncertaintyAvoidance: 40, longTermOrientation: 51, indulgence: 26 },
+  {
+    isoCode: "IN",
+    name: "India",
+    powerDistance: 77,
+    individualism: 48,
+    masculinity: 56,
+    uncertaintyAvoidance: 40,
+    longTermOrientation: 51,
+    indulgence: 26,
+  },
   // South Korea
-  { isoCode: "KR", name: "South Korea", powerDistance: 60, individualism: 18, masculinity: 39, uncertaintyAvoidance: 85, longTermOrientation: 100, indulgence: 29 },
+  {
+    isoCode: "KR",
+    name: "South Korea",
+    powerDistance: 60,
+    individualism: 18,
+    masculinity: 39,
+    uncertaintyAvoidance: 85,
+    longTermOrientation: 100,
+    indulgence: 29,
+  },
   // Netherlands
-  { isoCode: "NL", name: "Netherlands", powerDistance: 38, individualism: 80, masculinity: 14, uncertaintyAvoidance: 53, longTermOrientation: 67, indulgence: 68 },
+  {
+    isoCode: "NL",
+    name: "Netherlands",
+    powerDistance: 38,
+    individualism: 80,
+    masculinity: 14,
+    uncertaintyAvoidance: 53,
+    longTermOrientation: 67,
+    indulgence: 68,
+  },
   // Sweden
-  { isoCode: "SE", name: "Sweden", powerDistance: 31, individualism: 71, masculinity: 5, uncertaintyAvoidance: 29, longTermOrientation: 53, indulgence: 78 },
+  {
+    isoCode: "SE",
+    name: "Sweden",
+    powerDistance: 31,
+    individualism: 71,
+    masculinity: 5,
+    uncertaintyAvoidance: 29,
+    longTermOrientation: 53,
+    indulgence: 78,
+  },
   // Canada
-  { isoCode: "CA", name: "Canada", powerDistance: 39, individualism: 80, masculinity: 52, uncertaintyAvoidance: 48, longTermOrientation: 36, indulgence: 68 },
+  {
+    isoCode: "CA",
+    name: "Canada",
+    powerDistance: 39,
+    individualism: 80,
+    masculinity: 52,
+    uncertaintyAvoidance: 48,
+    longTermOrientation: 36,
+    indulgence: 68,
+  },
   // Australia
-  { isoCode: "AU", name: "Australia", powerDistance: 38, individualism: 90, masculinity: 61, uncertaintyAvoidance: 51, longTermOrientation: 21, indulgence: 71 },
+  {
+    isoCode: "AU",
+    name: "Australia",
+    powerDistance: 38,
+    individualism: 90,
+    masculinity: 61,
+    uncertaintyAvoidance: 51,
+    longTermOrientation: 21,
+    indulgence: 71,
+  },
   // Switzerland
-  { isoCode: "CH", name: "Switzerland", powerDistance: 34, individualism: 68, masculinity: 70, uncertaintyAvoidance: 58, longTermOrientation: 74, indulgence: 66 },
+  {
+    isoCode: "CH",
+    name: "Switzerland",
+    powerDistance: 34,
+    individualism: 68,
+    masculinity: 70,
+    uncertaintyAvoidance: 58,
+    longTermOrientation: 74,
+    indulgence: 66,
+  },
   // Russia
-  { isoCode: "RU", name: "Russia", powerDistance: 93, individualism: 39, masculinity: 36, uncertaintyAvoidance: 95, longTermOrientation: 81, indulgence: 20 },
+  {
+    isoCode: "RU",
+    name: "Russia",
+    powerDistance: 93,
+    individualism: 39,
+    masculinity: 36,
+    uncertaintyAvoidance: 95,
+    longTermOrientation: 81,
+    indulgence: 20,
+  },
   // Turkey
-  { isoCode: "TR", name: "Turkey", powerDistance: 66, individualism: 37, masculinity: 45, uncertaintyAvoidance: 85, longTermOrientation: 46, indulgence: 49 },
+  {
+    isoCode: "TR",
+    name: "Turkey",
+    powerDistance: 66,
+    individualism: 37,
+    masculinity: 45,
+    uncertaintyAvoidance: 85,
+    longTermOrientation: 46,
+    indulgence: 49,
+  },
   // Argentina
-  { isoCode: "AR", name: "Argentina", powerDistance: 49, individualism: 46, masculinity: 56, uncertaintyAvoidance: 86, longTermOrientation: 20, indulgence: 62 },
+  {
+    isoCode: "AR",
+    name: "Argentina",
+    powerDistance: 49,
+    individualism: 46,
+    masculinity: 56,
+    uncertaintyAvoidance: 86,
+    longTermOrientation: 20,
+    indulgence: 62,
+  },
   // Poland
-  { isoCode: "PL", name: "Poland", powerDistance: 68, individualism: 60, masculinity: 64, uncertaintyAvoidance: 93, longTermOrientation: 38, indulgence: 29 },
+  {
+    isoCode: "PL",
+    name: "Poland",
+    powerDistance: 68,
+    individualism: 60,
+    masculinity: 64,
+    uncertaintyAvoidance: 93,
+    longTermOrientation: 38,
+    indulgence: 29,
+  },
   // Greece
-  { isoCode: "GR", name: "Greece", powerDistance: 60, individualism: 35, masculinity: 57, uncertaintyAvoidance: 100, longTermOrientation: 45, indulgence: 50 },
+  {
+    isoCode: "GR",
+    name: "Greece",
+    powerDistance: 60,
+    individualism: 35,
+    masculinity: 57,
+    uncertaintyAvoidance: 100,
+    longTermOrientation: 45,
+    indulgence: 50,
+  },
   // Portugal
-  { isoCode: "PT", name: "Portugal", powerDistance: 63, individualism: 27, masculinity: 31, uncertaintyAvoidance: 99, longTermOrientation: 28, indulgence: 33 },
+  {
+    isoCode: "PT",
+    name: "Portugal",
+    powerDistance: 63,
+    individualism: 27,
+    masculinity: 31,
+    uncertaintyAvoidance: 99,
+    longTermOrientation: 28,
+    indulgence: 33,
+  },
   // Vietnam
-  { isoCode: "VN", name: "Vietnam", powerDistance: 70, individualism: 20, masculinity: 40, uncertaintyAvoidance: 30, longTermOrientation: 57, indulgence: 35 },
+  {
+    isoCode: "VN",
+    name: "Vietnam",
+    powerDistance: 70,
+    individualism: 20,
+    masculinity: 40,
+    uncertaintyAvoidance: 30,
+    longTermOrientation: 57,
+    indulgence: 35,
+  },
   // Thailand
-  { isoCode: "TH", name: "Thailand", powerDistance: 64, individualism: 20, masculinity: 34, uncertaintyAvoidance: 64, longTermOrientation: 32, indulgence: 45 },
+  {
+    isoCode: "TH",
+    name: "Thailand",
+    powerDistance: 64,
+    individualism: 20,
+    masculinity: 34,
+    uncertaintyAvoidance: 64,
+    longTermOrientation: 32,
+    indulgence: 45,
+  },
   // Singapore
-  { isoCode: "SG", name: "Singapore", powerDistance: 74, individualism: 20, masculinity: 48, uncertaintyAvoidance: 8, longTermOrientation: 72, indulgence: 46 },
+  {
+    isoCode: "SG",
+    name: "Singapore",
+    powerDistance: 74,
+    individualism: 20,
+    masculinity: 48,
+    uncertaintyAvoidance: 8,
+    longTermOrientation: 72,
+    indulgence: 46,
+  },
   // Malaysia
-  { isoCode: "MY", name: "Malaysia", powerDistance: 100, individualism: 26, masculinity: 50, uncertaintyAvoidance: 36, longTermOrientation: 41, indulgence: 57 },
+  {
+    isoCode: "MY",
+    name: "Malaysia",
+    powerDistance: 100,
+    individualism: 26,
+    masculinity: 50,
+    uncertaintyAvoidance: 36,
+    longTermOrientation: 41,
+    indulgence: 57,
+  },
   // Indonesia
-  { isoCode: "ID", name: "Indonesia", powerDistance: 78, individualism: 14, masculinity: 46, uncertaintyAvoidance: 48, longTermOrientation: 62, indulgence: 38 },
+  {
+    isoCode: "ID",
+    name: "Indonesia",
+    powerDistance: 78,
+    individualism: 14,
+    masculinity: 46,
+    uncertaintyAvoidance: 48,
+    longTermOrientation: 62,
+    indulgence: 38,
+  },
   // Philippines
-  { isoCode: "PH", name: "Philippines", powerDistance: 94, individualism: 32, masculinity: 64, uncertaintyAvoidance: 44, longTermOrientation: 27, indulgence: 42 },
+  {
+    isoCode: "PH",
+    name: "Philippines",
+    powerDistance: 94,
+    individualism: 32,
+    masculinity: 64,
+    uncertaintyAvoidance: 44,
+    longTermOrientation: 27,
+    indulgence: 42,
+  },
   // Finland
-  { isoCode: "FI", name: "Finland", powerDistance: 33, individualism: 63, masculinity: 26, uncertaintyAvoidance: 59, longTermOrientation: 38, indulgence: 57 },
+  {
+    isoCode: "FI",
+    name: "Finland",
+    powerDistance: 33,
+    individualism: 63,
+    masculinity: 26,
+    uncertaintyAvoidance: 59,
+    longTermOrientation: 38,
+    indulgence: 57,
+  },
   // Norway
-  { isoCode: "NO", name: "Norway", powerDistance: 31, individualism: 69, masculinity: 8, uncertaintyAvoidance: 50, longTermOrientation: 35, indulgence: 55 },
+  {
+    isoCode: "NO",
+    name: "Norway",
+    powerDistance: 31,
+    individualism: 69,
+    masculinity: 8,
+    uncertaintyAvoidance: 50,
+    longTermOrientation: 35,
+    indulgence: 55,
+  },
   // Denmark
-  { isoCode: "DK", name: "Denmark", powerDistance: 18, individualism: 74, masculinity: 16, uncertaintyAvoidance: 23, longTermOrientation: 35, indulgence: 70 },
+  {
+    isoCode: "DK",
+    name: "Denmark",
+    powerDistance: 18,
+    individualism: 74,
+    masculinity: 16,
+    uncertaintyAvoidance: 23,
+    longTermOrientation: 35,
+    indulgence: 70,
+  },
   // New Zealand
-  { isoCode: "NZ", name: "New Zealand", powerDistance: 22, individualism: 79, masculinity: 58, uncertaintyAvoidance: 49, longTermOrientation: 33, indulgence: 75 },
+  {
+    isoCode: "NZ",
+    name: "New Zealand",
+    powerDistance: 22,
+    individualism: 79,
+    masculinity: 58,
+    uncertaintyAvoidance: 49,
+    longTermOrientation: 33,
+    indulgence: 75,
+  },
 ];
 
 export async function seedHofstedeData() {
   console.log("Seeding Hofstede Framework data...");
-  
+
   for (const country of hofstedeData) {
     // Normalize scores from 0-100 to [0,1]
     const normalized = {
       powerDistance: normalizeHofstedeScore(country.powerDistance),
       individualism: normalizeHofstedeScore(country.individualism),
       masculinity: normalizeHofstedeScore(country.masculinity),
-      uncertaintyAvoidance: normalizeHofstedeScore(country.uncertaintyAvoidance),
+      uncertaintyAvoidance: normalizeHofstedeScore(
+        country.uncertaintyAvoidance
+      ),
       longTermOrientation: normalizeHofstedeScore(country.longTermOrientation),
       indulgence: normalizeHofstedeScore(country.indulgence),
     };
-    
+
     // Insert country
     await db
       .insert(countries)
@@ -557,7 +1280,7 @@ export async function seedHofstedeData() {
         name: country.name,
       })
       .onConflictDoNothing();
-    
+
     // Insert Hofstede scores
     await db
       .insert(hofstedeScores)
@@ -581,8 +1304,10 @@ export async function seedHofstedeData() {
         },
       });
   }
-  
-  console.log(`Seeded ${hofstedeData.length} countries with Hofstede Framework data`);
+
+  console.log(
+    `Seeded ${hofstedeData.length} countries with Hofstede Framework data`
+  );
 }
 ```
 
@@ -599,20 +1324,20 @@ import { seedHofstedeData } from "./seed-hofstede-data";
  * Main seed function that loads all cultural framework data
  * Uses database transactions to ensure atomicity
  * Safe to run multiple times (idempotent)
- * 
+ *
  * Data is loaded from the seed scripts below, which should be updated
  * with data from docs/Quantifying-Culture-data.xlsx
  */
 export async function seedCulturalData() {
   console.log("Starting cultural data seeding...");
-  
+
   try {
     // Run all seed functions in sequence
     // Each function handles its own transactions and conflict resolution
     await seedLewisData();
     await seedHallData();
     await seedHofstedeData();
-    
+
     console.log("Cultural data seeding completed successfully");
   } catch (error) {
     console.error("Error seeding cultural data:", error);
@@ -643,11 +1368,13 @@ The Lewis Model was developed by linguist and cross-cultural specialist Richard 
 **Three Cultural Types:**
 
 1. **Linear-Active**
+
    - Task-oriented, highly-organized planners
    - Characteristics: Talks half the time, does one thing at a time, plans ahead step by step, polite but direct, partly conceals feelings, confronts with logic, dislikes losing face, rarely interrupts, job-oriented, uses many facts, truth before diplomacy, sometimes impatient, limited body language, respects officialdom, separates the social and professional
    - Examples: Germany, Switzerland, United States, United Kingdom, Netherlands
 
 2. **Multi-Active**
+
    - Emotional, loquacious, and impulsive
    - Characteristics: Talks most of the time, does several things at once, plans grand outline only, emotional, displays feelings, confronts emotionally, has good excuses, often interrupts, people-oriented, feelings before facts, flexible truth, impatient, unlimited body language, seeks out key person, interweaves the social and professional
    - Examples: Italy, Spain, Latin America, Middle East, Africa
@@ -666,11 +1393,13 @@ Edward T. Hall's framework identifies three key dimensions of cultural communica
 **Three Dimensions:**
 
 1. **Context (High vs Low)**
+
    - **High-context**: Many covert/implicit messages, strong ingroup/outgroup distinction, information is embedded in context, relationships matter more than words
    - **Low-context**: Overt/explicit messages, flexible grouping patterns, information is explicit and direct, words matter more than context
    - Score: `context_high` (0 = low-context, 1 = high-context)
 
 2. **Time (Monochronic vs Polychronic)**
+
    - **Monochronic**: One thing at a time, time is linear and sequential, punctuality is important, schedules are rigid
    - **Polychronic**: Many things at once, time is flexible and fluid, relationships matter more than schedules, multitasking is common
    - Score: `time_polychronic` (0 = monochronic, 1 = polychronic)
@@ -689,26 +1418,31 @@ Geert Hofstede's cultural dimensions theory identifies six dimensions for compar
 **Six Dimensions:**
 
 1. **Power Distance Index (PDI)**
+
    - Degree to which less powerful members of a society accept and expect that power is distributed unequally
    - Low PDI: Egalitarian, power is shared
    - High PDI: Hierarchical, power is concentrated
 
 2. **Individualism vs Collectivism (IDV)**
+
    - Extent to which individuals are integrated into groups
    - Low IDV (Collectivist): Group loyalty, harmony, interdependence
    - High IDV (Individualist): Personal achievement, independence, self-reliance
 
 3. **Masculinity vs Femininity (MAS)**
+
    - Distribution of emotional roles between genders
    - Low MAS (Feminine): Cooperation, modesty, quality of life
    - High MAS (Masculine): Competition, achievement, material success
 
 4. **Uncertainty Avoidance Index (UAI)**
+
    - Society's tolerance for uncertainty and ambiguity
    - Low UAI: Comfortable with ambiguity, flexible, risk-taking
    - High UAI: Need for rules, structure, risk-averse
 
 5. **Long-term Orientation vs Short-term (LTO)**
+
    - Focus on future rewards versus past and present
    - Low LTO (Short-term): Tradition, quick results, respect for history
    - High LTO (Long-term): Persistence, thrift, adaptation
@@ -748,6 +1482,7 @@ npx tsx migrations/seed-cultural-data.ts
 ### Data Source Reference
 
 The seed scripts below contain country data extracted from `Quantifying-Culture-data.xlsx`. The Excel file serves as the reference source for:
+
 - Country list with ISO codes and names
 - Lewis Model scores (Linear-Active, Multi-Active, Reactive)
 - Hall Framework scores (Context, Time, Space)
@@ -774,6 +1509,7 @@ Lewis Model data is based on Richard D. Lewis's research. To add more countries:
 4. Countries may exhibit mixed characteristics; scores should reflect relative dominance
 
 **Example Classification:**
+
 - Linear-Active dominant: Germany (0.8, 0.15, 0.05)
 - Multi-Active dominant: Italy (0.2, 0.7, 0.1)
 - Reactive dominant: Japan (0.2, 0.15, 0.65)
@@ -809,6 +1545,7 @@ All seed scripts include validation:
 ## Normalization
 
 All scores are normalized to [0,1] range:
+
 - **Lewis Model**: Scores are proportions that sum to 1.0 (normalized if needed)
 - **Hall Framework**: Scores are already on [0,1] scale
 - **Hofstede Framework**: Original scores (0-100) are normalized using formula: `normalized = value / 100`
@@ -817,6 +1554,7 @@ All scores are normalized to [0,1] range:
 ## Country Selection Component
 
 The country select component should:
+
 - Display countries alphabetically by name
 - Support search/filter functionality
 - Show country name with flag emoji (optional)
@@ -829,10 +1567,259 @@ The country select component should:
 - Check constraints validate score ranges (0-1)
 - Cascade deletes not recommended (preserve historical data)
 
+## Visualization Requirements
+
+The cultural reference data feature provides framework-specific visualizations that help facilitators understand and demonstrate how different countries are positioned across cultural dimensions. These visualizations can be used for educational purposes and to explain the cultural distance calculations.
+
+### Framework-Specific Visualizations
+
+#### Lewis Framework (3 Dimensions)
+
+**Visualization Types**:
+
+1. **Radar/Spider Chart**
+
+   - Three axes: Linear-Active, Multi-Active, Reactive
+   - Each country displayed as a polygon overlay
+   - Multiple countries can be compared side-by-side
+   - Interactive: Hover to highlight country, click to isolate
+   - Use case: Compare behavioral type profiles across countries
+
+2. **Ternary Plot**
+
+   - Triangular scatter plot with three vertices (Linear-Active, Multi-Active, Reactive)
+   - Each country positioned based on proportional scores
+   - Countries near a vertex are dominant in that behavioral type
+   - Color coding by region or behavioral type dominance
+   - Interactive: Hover for country details, zoom and pan
+   - Use case: Visualize the distribution of behavioral types across all countries
+
+3. **Bar Chart Comparison**
+   - Three grouped bars per country (one for each dimension)
+   - Stacked or side-by-side bars
+   - Multiple countries can be selected for comparison
+   - Use case: Direct numerical comparison of scores
+
+**Features**:
+
+- Filter by country: Select specific countries to visualize
+- Compare mode: Overlay multiple countries on same chart
+- Export: Download visualization as image
+- Tooltips: Show exact score values on hover
+
+#### Hall Framework (3 Dimensions)
+
+**Visualization Types**:
+
+1. **3D Scatter Plot**
+
+   - Three axes: Context (High/Low), Time (Monochronic/Polychronic), Space (Private/Public)
+   - Countries positioned in 3D space
+   - Interactive rotation, zoom, and pan
+   - Color coding by cultural cluster or region
+   - Use case: Understand spatial relationships between countries
+
+2. **Parallel Coordinates Plot**
+
+   - Three parallel vertical axes, one per dimension
+   - Each country represented as a line connecting its scores
+   - Lines can be colored or highlighted for comparison
+   - Interactive: Drag axes to reorder, brush to filter
+   - Use case: Compare countries across all three dimensions simultaneously
+
+3. **Radar Chart**
+   - Three-armed radar showing Context, Time, Space
+   - Multiple countries overlaid for comparison
+   - Interactive highlighting and filtering
+   - Use case: Compare specific countries' communication patterns
+
+**Features**:
+
+- 3D visualization toggle: Switch between 2D projection and 3D view
+- Cluster analysis: Automatically group similar countries
+- Cultural cluster coloring: Visual grouping of similar cultures
+- Interactive filters: Filter by dimension ranges
+
+#### Hofstede Framework (6 Dimensions)
+
+**Visualization Types**:
+
+1. **Radar/Spider Chart**
+
+   - Six-armed radar showing all dimensions:
+     - Power Distance
+     - Individualism
+     - Masculinity
+     - Uncertainty Avoidance
+     - Long-term Orientation
+     - Indulgence
+   - Each country displayed as a polygon
+   - Multiple countries can be compared
+   - Use case: Comprehensive cultural profile comparison
+
+2. **Bar Chart Comparison**
+
+   - Six grouped bars per country (one per dimension)
+   - Side-by-side or stacked presentation
+   - Multiple countries selectable
+   - Sorting options: by dimension or country
+   - Use case: Detailed numerical comparison
+
+3. **Parallel Coordinates Plot**
+
+   - Six parallel vertical axes, one per dimension
+   - Countries as lines connecting dimension scores
+   - Interactive brushing and filtering
+   - Color coding by cultural clusters
+   - Use case: Identify patterns and outliers across dimensions
+
+4. **Heatmap Matrix**
+   - Countries as rows, dimensions as columns
+   - Color intensity represents score magnitude
+   - Sorting by country or dimension
+   - Use case: Overview of all countries and dimensions
+
+**Features**:
+
+- Dimension filtering: Show/hide specific dimensions
+- Country search: Quick filter by country name
+- Comparison mode: Select 2-5 countries for detailed comparison
+- Export capabilities: Download visualizations and data
+
+### User Flow
+
+1. Facilitator navigates to cultural reference data visualization page (or embedded view)
+2. Facilitator selects framework to visualize (Lewis, Hall, or Hofstede)
+3. System loads cultural scores for all countries in selected framework
+4. System displays default visualization for selected framework
+5. Facilitator can:
+   - Select specific countries to display
+   - Switch visualization type (radar, bar chart, scatter plot, etc.)
+   - Compare multiple countries
+   - Filter or search countries
+   - Export visualization
+6. For workshop context:
+   - Optionally filter to show only countries represented by participants
+   - Highlight participant countries in visualization
+   - Compare participant countries against all countries
+
+### Data Requirements
+
+**Query Requirements**:
+
+- Fetch all countries with cultural scores for selected framework
+- Optional: Filter countries by workshop participants
+- Support partial data (some countries may have incomplete framework data)
+
+**Real-time Updates**:
+
+- Framework switching triggers immediate data reload
+- Country selection updates visualization in real-time
+- No caching needed (reference data is static)
+
+### Technical Implementation Details
+
+#### Key Files
+
+- `components/cultural-visualizations/framework-view.tsx` - Framework-specific visualization component
+- `components/cultural-visualizations/lewis-visualization.tsx` - Lewis framework visualizations
+- `components/cultural-visualizations/hall-visualization.tsx` - Hall framework visualizations
+- `components/cultural-visualizations/hofstede-visualization.tsx` - Hofstede framework visualizations
+- `lib/utils/framework-visualization-data.ts` - Transform cultural data for visualizations
+
+#### Dependencies
+
+- `recharts`: Radar charts, bar charts, scatter plots
+- `@react-three/fiber` + `three`: Optional 3D scatter plots for Hall framework
+- `d3-scale-chromatic`: Color schemes for visualizations
+- `react-parallel-coordinates`: Parallel coordinates plots (if using specialized library)
+
+#### Data Transformation Examples
+
+```typescript
+// lib/utils/framework-visualization-data.ts
+export function transformLewisDataForRadar(
+  countries: Array<{ name: string; scores: LewisScores }>
+): RadarData {
+  return countries.map((country) => ({
+    country: country.name,
+    "Linear-Active": country.scores.linearActive,
+    "Multi-Active": country.scores.multiActive,
+    Reactive: country.scores.reactive,
+  }));
+}
+
+export function transformHallDataFor3DScatter(
+  countries: Array<{ name: string; scores: HallScores }>
+): Scatter3DData {
+  return countries.map((country) => ({
+    x: country.scores.contextHigh,
+    y: country.scores.timePolychronic,
+    z: country.scores.spacePrivate,
+    country: country.name,
+  }));
+}
+
+export function transformHofstedeDataForRadar(
+  countries: Array<{ name: string; scores: HofstedeScores }>
+): RadarData {
+  return countries.map((country) => ({
+    country: country.name,
+    "Power Distance": country.scores.powerDistance,
+    Individualism: country.scores.individualism,
+    Masculinity: country.scores.masculinity,
+    "Uncertainty Avoidance": country.scores.uncertaintyAvoidance,
+    "Long-term Orientation": country.scores.longTermOrientation,
+    Indulgence: country.scores.indulgence,
+  }));
+}
+```
+
+### Performance Considerations
+
+- Lazy load 3D visualizations (only load when selected)
+- Virtualize long country lists in dropdowns
+- Memoize transformed visualization data
+- Progressive rendering for large country sets
+- Cache color assignments per framework
+
+### Accessibility
+
+- Screen reader support: Alternative text descriptions of visualizations
+- Keyboard navigation: Tab through country selection, arrow keys for charts
+- High contrast mode: Available color schemes
+- Text alternatives: Numerical data available as tables
+- Tooltip information also in accessible info panels
+
+### Visualization Acceptance Criteria
+
+- All framework visualizations render correctly
+- Framework switching updates visualization immediately
+- Country selection and filtering work smoothly
+- Comparison mode accurately overlays multiple countries
+- 3D visualizations are interactive and performant
+- Export functionality works for all visualization types
+- Visualizations are accessible (keyboard, screen reader)
+- Color schemes are distinguishable and accessible
+- Performance acceptable: renders in <1 second for all countries
+- Mobile-responsive: Simplified views on small screens
+
+### Integration with Workshop Context
+
+When used in workshop context:
+
+- Option to filter to participant countries only
+- Highlight participant countries in full country visualization
+- Show cultural dimension breakdown for workshop's cultural landscape
+- Compare workshop participants against global cultural distribution
+
 ## Future Enhancements
 
 - Additional cultural frameworks
 - Historical cultural data (temporal changes)
 - Regional/city-level cultural data
-- Cultural data visualization tools
 - Data update mechanisms (admin interface with migration approval)
+- Interactive cultural dimension explanations
+- Country similarity clustering algorithms
+- Cultural dimension correlation analysis
+- Animated transitions between frameworks

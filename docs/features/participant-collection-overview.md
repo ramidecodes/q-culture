@@ -289,6 +289,199 @@ export function CountryDistribution({ workshopId }: { workshopId: string }) {
 - No sensitive participant data exposed (only name and country)
 - Session tokens not displayed or accessible
 
+## Visualization Requirements
+
+The participant collection overview feature provides visualizations that help facilitators understand the cultural landscape of their workshop participants, including country distribution and cultural dimension patterns.
+
+### Country Distribution Charts
+
+**Purpose**: Visualize the geographic and cultural distribution of participants
+
+**Visualization Types**:
+
+1. **Bar Chart**
+   - Horizontal or vertical bars showing participant count per country
+   - Sorted by count (descending) or alphabetically
+   - Color coding by region or cultural cluster
+   - Interactive: Click bar to filter participants from that country
+   - Use case: Quick overview of country representation
+
+2. **Pie/Donut Chart**
+   - Circular chart showing proportion of participants per country
+   - Color-coded segments
+   - Hover to see country name and count
+   - Interactive: Click segment to filter
+   - Use case: Understand relative representation of countries
+
+3. **World Map Visualization** (Optional Enhancement)
+   - World map with countries highlighted based on participant count
+   - Color intensity represents number of participants
+   - Click country to filter participants
+   - Tooltip shows country name and participant count
+   - Use case: Geographic overview of participant distribution
+
+**Features**:
+- Country selection: Click to filter participant list
+- Sorting: By count or alphabetically
+- Region grouping: Group countries by geographic region
+- Export: Download chart as image
+
+### Cultural Landscape Visualization
+
+**Purpose**: Show the cultural dimension patterns of workshop participants
+
+**Visualization Types**:
+
+1. **Cultural Dimension Heatmap**
+   - Participants as rows, cultural dimensions as columns
+   - Color intensity represents dimension scores
+   - Framework-specific (Lewis, Hall, or Hofstede)
+   - Grouped by country or sorted by dimension scores
+   - Use case: Understand cultural diversity across dimensions
+
+2. **Dimension Distribution Charts**
+   - Histogram or box plot for each cultural dimension
+   - Shows distribution of participant scores
+   - Can overlay country distributions
+   - Use case: Identify cultural diversity patterns
+
+3. **Country Cultural Profile Comparison**
+   - Radar chart or bar chart comparing all represented countries
+   - Framework-specific visualization
+   - Multiple countries overlaid
+   - Use case: Compare cultural profiles of participant countries
+
+4. **Cultural Clustering Preview**
+   - Network graph preview showing potential groupings
+   - Nodes represent participants, positioned by cultural similarity
+   - Edges show cultural distances (can be thresholded)
+   - Color coding by country
+   - Use case: Preview how grouping might work
+
+**Features**:
+- Framework switching: View different frameworks (Lewis, Hall, Hofstede)
+- Country filtering: Focus on specific countries
+- Dimension filtering: Show/hide specific dimensions
+- Export capabilities: Download visualizations
+
+### User Flow
+
+1. Facilitator navigates to participant collection overview page
+2. System displays participant list and country distribution chart (default)
+3. Facilitator can:
+   - View country distribution in different chart types (bar, pie, map)
+   - Click country to filter participant list
+   - Switch to cultural landscape visualization
+   - Change framework to view different cultural dimensions
+   - Export visualizations
+4. Cultural landscape visualization shows:
+   - Cultural dimension heatmap
+   - Dimension distribution charts
+   - Country profile comparisons
+   - Optional clustering preview
+
+### Data Requirements
+
+**Query Requirements**:
+- Fetch all participants with country information
+- Fetch cultural scores for participant countries
+- Aggregate country distribution data
+- Optional: Geographic coordinates for map visualization
+
+**Real-time Updates**:
+- Visualizations update when new participants join (via polling)
+- Country distribution chart updates automatically
+- Cultural landscape recalculates as participants are added
+
+**Caching Considerations**:
+- Country distribution can be cached (updates only when participants change)
+- Cultural dimension data can be pre-computed for participant countries
+
+### Technical Implementation Details
+
+#### Key Files
+
+- `components/participant-visualizations/country-distribution-chart.tsx` - Country distribution charts
+- `components/participant-visualizations/cultural-landscape.tsx` - Cultural landscape visualization
+- `components/participant-visualizations/cultural-heatmap.tsx` - Dimension heatmap component
+- `lib/utils/participant-visualization-data.ts` - Transform participant data for visualizations
+
+#### Dependencies
+
+- `recharts`: Bar charts, pie charts, histograms
+- `react-simple-maps` or `react-world-map`: Optional world map visualization
+- `d3-scale-chromatic`: Color schemes for visualizations
+- `react-force-graph-2d`: Optional clustering preview network graph
+
+#### Data Transformation Examples
+
+```typescript
+// lib/utils/participant-visualization-data.ts
+export function transformCountryDistribution(
+  participants: Array<{ countryCode: string; countryName: string }>
+): DistributionData {
+  const counts = new Map<string, { name: string; count: number }>();
+  
+  for (const p of participants) {
+    const existing = counts.get(p.countryCode) ?? { name: p.countryName, count: 0 };
+    existing.count++;
+    counts.set(p.countryCode, existing);
+  }
+  
+  return Array.from(counts.values()).sort((a, b) => b.count - a.count);
+}
+
+export function transformCulturalLandscape(
+  participants: Array<{ id: string; countryCode: string; culturalScores: CulturalScores }>,
+  framework: Framework
+): HeatmapData {
+  return participants.map((p) => {
+    const scores = getFrameworkScores(p.culturalScores, framework);
+    return {
+      participantId: p.id,
+      countryCode: p.countryCode,
+      ...scores,
+    };
+  });
+}
+```
+
+### Performance Considerations
+
+- Efficient aggregation of country distribution
+- Lazy load world map visualization (if implemented)
+- Memoize cultural landscape calculations
+- Progressive rendering for large participant sets
+- Cache country distribution until participants change
+
+### Accessibility
+
+- Screen reader support: Alternative text for charts
+- Keyboard navigation: Tab through chart elements
+- High contrast mode: Accessible color schemes
+- Text alternatives: Country distribution available as table
+- Tooltip information also in accessible format
+
+### Visualization Acceptance Criteria
+
+- Country distribution charts render correctly
+- Charts update when participants are added/removed
+- Cultural landscape visualizations are accurate
+- Framework switching updates visualizations correctly
+- Interactive features (click to filter) work smoothly
+- Export functionality works (images, CSV data)
+- Visualizations are accessible (keyboard, screen reader)
+- Performance acceptable: renders in <1 second for typical workshops
+- Mobile-responsive: Simplified charts on small screens
+- Country filtering updates participant list correctly
+
+### Integration with Other Features
+
+- **Cultural Reference Data**: Uses cultural scores for visualizations
+- **Group Generation Configuration**: Framework selection affects cultural landscape view
+- **Cultural Distance Computation**: Clustering preview uses distance calculations
+- **Group Assignment**: Cultural landscape can preview grouping potential
+
 ## Future Enhancements
 
 - Export participant list to CSV
@@ -296,4 +489,7 @@ export function CountryDistribution({ workshopId }: { workshopId: string }) {
 - Participant removal (with confirmation)
 - Participant notes/annotations
 - Timeline view of join times
-- Visualization charts for country distribution
+- World map with interactive country selection
+- Cultural diversity metrics dashboard
+- Prediction of optimal group size based on cultural distribution
+- Animated timeline showing cultural landscape changes as participants join

@@ -405,11 +405,241 @@ export async function generateWorkshopGroups(workshopId: string) {
 - If any part fails, entire operation rolls back
 - Ensures data consistency
 
+## Visualization Requirements
+
+The group assignment feature provides visualizations that help facilitators understand how groups were formed, verify group diversity, and demonstrate the grouping results to participants or stakeholders.
+
+### Group Network Visualization
+
+**Purpose**: Visualize generated groups and their internal diversity using network graphs
+
+**Components**:
+- Network graph with nodes representing participants
+- Nodes colored or clustered by group assignment
+- Edges represent cultural distances between participants
+- Intra-group connections highlighted (edges within same group)
+- Inter-group connections shown with different styling (lighter/thinner)
+- Group boundaries can be visually indicated (circles, clustering, or color coding)
+
+**Features**:
+- Group highlighting: Click a group to highlight all members and connections
+- Distance display: Hover over edges to see exact cultural distances
+- Group statistics overlay: Display average intra-group distance for each group
+- Framework switching: Update distances based on selected framework
+- Layout options:
+  - Clustered layout: Groups positioned as distinct clusters
+  - Force-directed layout: Natural grouping based on distances
+  - Circular layout: Groups arranged in circles
+- Filter options:
+  - Show/hide inter-group connections
+  - Show/hide intra-group connections
+  - Highlight specific groups
+  - Filter by distance threshold
+
+**Use Cases**:
+- Facilitator reviews group assignments visually
+- Verify that groups are maximally diverse (larger intra-group distances)
+- Demonstrate grouping algorithm results
+- Compare groups side-by-side
+- Show cultural diversity within each group
+
+### Group Diversity Metrics Display
+
+**Purpose**: Show quantitative metrics about group quality and diversity
+
+**Metrics Displayed**:
+- **Average intra-group distance**: Mean distance between all pairs within each group
+- **Minimum intra-group distance**: Smallest distance between any two members in group
+- **Maximum intra-group distance**: Largest distance between any two members in group
+- **Group diversity score**: Normalized score indicating overall diversity
+- **Inter-group comparison**: Compare diversity metrics across groups
+
+**Visualization Types**:
+1. **Bar Chart**: One bar per group showing average intra-group distance
+2. **Table View**: Detailed metrics table with sortable columns
+3. **Radar Chart**: Compare multiple groups across different metrics
+4. **Distribution Chart**: Histogram showing distance distribution within groups
+
+**Interactive Features**:
+- Sort groups by any metric
+- Filter groups by diversity thresholds
+- Highlight groups with low/high diversity
+- Export metrics as CSV or report
+
+### User Flow
+
+1. Facilitator generates groups (via group assignment algorithm)
+2. System creates groups and stores in database
+3. System displays group assignment confirmation with visualization button
+4. Facilitator clicks "View Group Visualization" button
+5. System displays group network graph (default view)
+6. Facilitator can:
+   - Switch between network graph and metrics view
+   - Click groups to see details
+   - View diversity metrics table
+   - Export visualization or metrics
+   - Compare groups
+7. Facilitator can use visualization to:
+   - Verify group quality
+   - Explain grouping to participants
+   - Demonstrate cultural diversity
+   - Share results with stakeholders
+
+### Data Requirements
+
+**Query Requirements**:
+- Fetch all groups for workshop
+- Fetch all participants with their group assignments
+- Fetch cultural scores for participants
+- Compute distance matrix for selected framework
+- Calculate diversity metrics for each group
+
+**Real-time Updates**:
+- Visualization updates if groups are regenerated
+- Framework switching recalculates distances and metrics
+- Group changes (manual adjustments, if supported) update visualization
+
+### Technical Implementation Details
+
+#### Key Files
+
+- `components/cultural-visualizations/group-network.tsx` - Group network visualization component
+- `components/cultural-visualizations/group-metrics.tsx` - Diversity metrics display component
+- `lib/utils/group-visualization-data.ts` - Transform groups and distances for visualization
+- `lib/utils/group-metrics.ts` - Calculate diversity metrics for groups
+
+#### Dependencies
+
+- `react-force-graph-2d`: Network graph rendering with group clustering
+- `recharts`: Bar charts and other metric visualizations
+- `d3-scale-chromatic`: Color schemes for group differentiation
+
+#### Group Metrics Calculation
+
+```typescript
+// lib/utils/group-metrics.ts
+export function calculateGroupMetrics(
+  group: { participants: string[] },
+  distanceMatrix: Map<string, Map<string, number>>
+): GroupMetrics {
+  const distances: number[] = [];
+  
+  for (let i = 0; i < group.participants.length; i++) {
+    for (let j = i + 1; j < group.participants.length; j++) {
+      const dist = distanceMatrix
+        .get(group.participants[i])
+        ?.get(group.participants[j]) ?? 0;
+      distances.push(dist);
+    }
+  }
+  
+  return {
+    averageDistance: distances.reduce((a, b) => a + b, 0) / distances.length,
+    minDistance: Math.min(...distances),
+    maxDistance: Math.max(...distances),
+    diversityScore: normalizeDiversityScore(distances),
+  };
+}
+
+function normalizeDiversityScore(distances: number[]): number {
+  // Normalize to 0-1 scale based on framework's maximum distance
+  const avg = distances.reduce((a, b) => a + b, 0) / distances.length;
+  const maxPossible = Math.sqrt(6); // Maximum for Hofstede framework
+  return Math.min(avg / maxPossible, 1);
+}
+```
+
+#### Group Network Data Transformation
+
+```typescript
+// lib/utils/group-visualization-data.ts
+export function transformGroupsToNetworkData(
+  groups: Group[],
+  participants: Participant[],
+  distanceMatrix: Map<string, Map<string, number>>
+): NetworkData {
+  const nodes = participants.map((p) => {
+    const group = groups.find((g) => g.participants.includes(p.id));
+    return {
+      id: p.id,
+      name: p.name,
+      country: p.countryName,
+      group: group?.id,
+      groupNumber: group?.groupNumber,
+    };
+  });
+
+  const links: Array<{
+    source: string;
+    target: string;
+    distance: number;
+    isIntraGroup: boolean;
+  }> = [];
+
+  for (const [sourceId, distances] of distanceMatrix.entries()) {
+    for (const [targetId, distance] of distances.entries()) {
+      if (sourceId < targetId) {
+        const sourceGroup = groups.find((g) => g.participants.includes(sourceId));
+        const targetGroup = groups.find((g) => g.participants.includes(targetId));
+        const isIntraGroup = sourceGroup?.id === targetGroup?.id;
+
+        links.push({
+          source: sourceId,
+          target: targetId,
+          distance,
+          isIntraGroup,
+        });
+      }
+    }
+  }
+
+  return { nodes, links };
+}
+```
+
+### Performance Considerations
+
+- Efficient calculation of group metrics (O(n²) per group)
+- Lazy load visualization if many groups
+- Memoize group network data transformation
+- Progressive rendering for large groups
+- Cache metrics calculations per framework
+
+### Accessibility
+
+- Keyboard navigation: Tab through groups, arrow keys to navigate
+- Screen reader support: Descriptive text for group assignments and metrics
+- High contrast mode: Group colors distinguishable
+- Text alternatives: Metrics available in accessible table format
+- Tooltip information also in info panels
+
+### Visualization Acceptance Criteria
+
+- Group network graph renders correctly with proper grouping
+- Groups are clearly distinguishable (colors, clusters, or boundaries)
+- Intra-group and inter-group connections are visually distinct
+- Diversity metrics are accurate and displayed clearly
+- Framework switching updates visualization correctly
+- Export functionality works (image, CSV metrics)
+- Interactive features (hover, click, filter) work smoothly
+- Performance acceptable: renders in <2 seconds for typical workshops
+- Mobile-responsive: Simplified view on small screens
+- Metrics table is sortable and filterable
+
+### Integration with Other Features
+
+- **Cultural Distance Computation**: Uses distance matrix from computation feature
+- **Group Generation Configuration**: Framework selection affects visualization
+- **Participant Collection Overview**: Can link from participant list to group visualization
+- **Participant Group View**: Participants can see simplified group visualization
+
 ## Future Enhancements
 
 - Improved algorithm (simulated annealing, genetic algorithm)
 - Additional constraints (gender balance, role diversity)
-- Group quality metrics (average distance, min distance)
-- Preview groups before confirming
-- Manual group adjustments
-- Group generation history
+- Preview groups before confirming (with visualization)
+- Manual group adjustments with live visualization update
+- Group generation history with comparison visualizations
+- Animation of group formation process
+- 3D visualization of group clusters
+- Group recommendation engine with visual explanations
