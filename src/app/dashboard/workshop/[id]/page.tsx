@@ -25,7 +25,7 @@ import { getWorkshopReflectionsWithMissing } from "@/lib/db/queries/reflection-q
 import { db } from "@/lib/db";
 import { groups } from "@/lib/db/schema";
 import { eq, count } from "drizzle-orm";
-import type { Framework } from "@/lib/utils/cultural-distance";
+import type { Framework } from "@/types/cultural";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -156,9 +156,10 @@ export default async function WorkshopPage({ params }: PageProps) {
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="participants">Participants</TabsTrigger>
           <TabsTrigger value="visualizations">Cultural Distances</TabsTrigger>
-          {hasGroups && (workshop.status === "grouped" || workshop.status === "closed") && (
-            <TabsTrigger value="reflections">Reflections</TabsTrigger>
-          )}
+          {hasGroups &&
+            (workshop.status === "grouped" || workshop.status === "closed") && (
+              <TabsTrigger value="reflections">Reflections</TabsTrigger>
+            )}
         </TabsList>
         <TabsContent value="overview" className="space-y-6">
           <Card>
@@ -256,27 +257,28 @@ export default async function WorkshopPage({ params }: PageProps) {
             framework={(workshop.framework as Framework) || "combined"}
           />
         </TabsContent>
-        {hasGroups && (workshop.status === "grouped" || workshop.status === "closed") && (
-          <TabsContent value="reflections" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Participant Reflections</CardTitle>
-                <CardDescription>
-                  Review all participant reflections organized by group.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {groupedReflections.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <p>No reflections found for this workshop.</p>
-                  </div>
-                ) : (
-                  <ReflectionList reflections={groupedReflections} />
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-        )}
+        {hasGroups &&
+          (workshop.status === "grouped" || workshop.status === "closed") && (
+            <TabsContent value="reflections" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Participant Reflections</CardTitle>
+                  <CardDescription>
+                    Review all participant reflections organized by group.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {groupedReflections.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <p>No reflections found for this workshop.</p>
+                    </div>
+                  ) : (
+                    <ReflectionList reflections={groupedReflections} />
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+          )}
       </Tabs>
     </div>
   );

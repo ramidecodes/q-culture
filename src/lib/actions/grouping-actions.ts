@@ -5,8 +5,8 @@ import { requireAuth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { groups, groupMembers, participants, workshops } from "@/lib/db/schema";
 import { generateGroups } from "@/lib/utils/group-assignment";
-import { getCountryCulturalData } from "@/lib/db/queries/country-queries";
-import type { Framework } from "@/lib/utils/cultural-distance";
+import { getCulturalDataForCountries } from "@/lib/db/queries/country-queries";
+import { validateFrameworkScores, type Framework } from "@/types/cultural";
 
 export type { Framework };
 export type GroupSize = 3 | 4 | null;
@@ -156,55 +156,32 @@ export async function generateWorkshopGroups(
     return { error: "Need at least 3 participants to form groups" };
   }
 
-  // Get cultural scores for each participant
-  const participantsWithScores = await Promise.all(
-    workshopParticipants.map(async (p) => {
-      const culturalData = await getCountryCulturalData(p.countryCode);
-      return {
-        id: p.id,
-        culturalScores: culturalData,
-      };
-    })
-  );
+  // Get cultural scores for all participants in a single batch query
+  const countryCodes = workshopParticipants.map((p) => p.countryCode);
+  const culturalDataMap = await getCulturalDataForCountries(countryCodes);
 
-  // Validate that all participants have required cultural data
+  // Build participants with scores and validate framework data
   const framework = workshop.framework as Framework;
-  for (const participant of participantsWithScores) {
-    if (framework === "lewis" && !participant.culturalScores.lewis) {
-      return {
-        error: `Participant's country (${
-          workshopParticipants.find((p) => p.id === participant.id)?.countryCode
-        }) is missing Lewis framework data`,
-      };
+  const participantsWithScores = [];
+
+  for (const participant of workshopParticipants) {
+    const culturalScores = culturalDataMap.get(participant.countryCode) ?? {};
+
+    // Validate framework scores
+    const validation = validateFrameworkScores(
+      culturalScores,
+      framework,
+      participant.countryCode
+    );
+
+    if (!validation.valid) {
+      return { error: validation.error };
     }
-    if (framework === "hall" && !participant.culturalScores.hall) {
-      return {
-        error: `Participant's country (${
-          workshopParticipants.find((p) => p.id === participant.id)?.countryCode
-        }) is missing Hall framework data`,
-      };
-    }
-    if (framework === "hofstede" && !participant.culturalScores.hofstede) {
-      return {
-        error: `Participant's country (${
-          workshopParticipants.find((p) => p.id === participant.id)?.countryCode
-        }) is missing Hofstede framework data`,
-      };
-    }
-    if (framework === "combined") {
-      const hasAny =
-        participant.culturalScores.lewis ||
-        participant.culturalScores.hall ||
-        participant.culturalScores.hofstede;
-      if (!hasAny) {
-        return {
-          error: `Participant's country (${
-            workshopParticipants.find((p) => p.id === participant.id)
-              ?.countryCode
-          }) is missing all cultural framework data`,
-        };
-      }
-    }
+
+    participantsWithScores.push({
+      id: participant.id,
+      culturalScores,
+    });
   }
 
   // Generate groups

@@ -39,8 +39,8 @@ export default async function ReflectionsPage({ params }: PageProps) {
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">
-              Please generate groups for this workshop first to enable reflection
-              viewing.
+              Please generate groups for this workshop first to enable
+              reflection viewing.
             </p>
           </CardContent>
         </Card>

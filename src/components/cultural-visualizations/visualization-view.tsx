@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/select";
 import { NetworkGraph } from "./network-graph";
 import { DistanceMatrixHeatmap } from "./distance-matrix-heatmap";
-import type { Framework } from "@/lib/utils/cultural-distance";
+import type { Framework } from "@/types/cultural";
 import type { VisualizationData } from "@/lib/db/queries/visualization-queries";
 import useSWR from "swr";
 

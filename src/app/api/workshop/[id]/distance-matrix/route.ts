@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { getVisualizationData } from "@/lib/db/queries/visualization-queries";
-import type { Framework } from "@/lib/utils/cultural-distance";
+import type { Framework } from "@/types/cultural";
 
 type RouteParams = Promise<{ id: string }>;
 

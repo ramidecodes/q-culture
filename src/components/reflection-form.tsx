@@ -172,8 +172,8 @@ export function ReflectionForm({ token }: ReflectionFormProps) {
                           remaining < 50 && remaining >= 0
                             ? "text-orange-600 dark:text-orange-400"
                             : remaining < 0
-                            ? "text-destructive"
-                            : ""
+                              ? "text-destructive"
+                              : ""
                         }
                       >
                         {charCount} / {MAX_LENGTH} characters

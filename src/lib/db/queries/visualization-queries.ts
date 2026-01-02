@@ -9,7 +9,7 @@ import {
   type Participant,
   type Group,
 } from "@/lib/utils/visualization-data";
-import type { Framework } from "@/lib/utils/cultural-distance";
+import type { Framework } from "@/types/cultural";
 
 export type VisualizationData = {
   framework: Framework;

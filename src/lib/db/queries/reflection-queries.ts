@@ -8,20 +8,22 @@ import {
 } from "@/lib/db/schema";
 import { getWorkshopById } from "./workshop-queries";
 
+type ParticipantReflection = {
+  participant: {
+    id: string;
+    name: string;
+  };
+  reflection: {
+    id: string;
+    content: string;
+    submittedAt: Date;
+  } | null;
+  submitted: boolean;
+};
+
 export type ReflectionGroupData = {
   groupNumber: number;
-  reflections: Array<{
-    participant: {
-      id: string;
-      name: string;
-    };
-    reflection: {
-      id: string;
-      content: string;
-      submittedAt: Date;
-    } | null;
-    submitted: boolean;
-  }>;
+  reflections: ParticipantReflection[];
 };
 
 /**
@@ -69,7 +71,6 @@ export async function getWorkshopReflectionsWithMissing(
     .where(inArray(groupMembers.groupId, groupIds));
 
   // Get all reflections for participants in this workshop
-  // We need to join through participants to filter by workshopId
   const allReflections = await db
     .select({
       id: reflections.id,
@@ -89,7 +90,7 @@ export async function getWorkshopReflectionsWithMissing(
 
   // Get all participants for this workshop who are in groups
   const participantIds = allMemberships.map((m) => m.participantId);
-  
+
   if (participantIds.length === 0) {
     return [];
   }
@@ -103,69 +104,55 @@ export async function getWorkshopReflectionsWithMissing(
     .where(inArray(participants.id, participantIds));
 
   // Create a map of participantId -> participant
-  const participantMap = new Map(
-    allParticipants.map((p) => [p.id, p])
-  );
+  const participantMap = new Map(allParticipants.map((p) => [p.id, p]));
 
   // Organize by group
-  const result: ReflectionGroupData[] = [];
-
-  for (const group of workshopGroups) {
+  return workshopGroups.map((group) => {
     // Get all members of this group
     const groupMemberIds = allMemberships
       .filter((m) => m.groupId === group.id)
       .map((m) => m.participantId);
 
-    const groupReflections = groupMemberIds
-      .map((participantId) => {
+    // Build reflection data for each member, filtering out missing participants
+    const groupReflections: ParticipantReflection[] = groupMemberIds.flatMap(
+      (participantId) => {
         const participant = participantMap.get(participantId);
         if (!participant) {
-          return null;
+          return [];
         }
 
-        const reflection = reflectionMap.get(participantId) || null;
+        const reflection = reflectionMap.get(participantId);
 
-        return {
-          participant: {
-            id: participant.id,
-            name: participant.name,
+        return [
+          {
+            participant: {
+              id: participant.id,
+              name: participant.name,
+            },
+            reflection: reflection
+              ? {
+                  id: reflection.id,
+                  content: reflection.content,
+                  submittedAt: reflection.submittedAt,
+                }
+              : null,
+            submitted: !!reflection,
           },
-          reflection: reflection
-            ? {
-                id: reflection.id,
-                content: reflection.content,
-                submittedAt: reflection.submittedAt,
-              }
-            : null,
-          submitted: !!reflection,
-        };
-      })
-      .filter(
-        (
-          item
-        ): item is {
-          participant: { id: string; name: string };
-          reflection: {
-            id: string;
-            content: string;
-            submittedAt: Date;
-          } | null;
-          submitted: boolean;
-        } => item !== null
-      )
-      .sort((a, b) => {
-        // Sort: submitted first, then by name
-        if (a.submitted !== b.submitted) {
-          return a.submitted ? -1 : 1;
-        }
-        return a.participant.name.localeCompare(b.participant.name);
-      });
+        ];
+      }
+    );
 
-    result.push({
+    // Sort: submitted first, then by name
+    groupReflections.sort((a, b) => {
+      if (a.submitted !== b.submitted) {
+        return a.submitted ? -1 : 1;
+      }
+      return a.participant.name.localeCompare(b.participant.name);
+    });
+
+    return {
       groupNumber: group.groupNumber,
       reflections: groupReflections,
-    });
-  }
-
-  return result;
+    };
+  });
 }

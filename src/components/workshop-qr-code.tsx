@@ -16,8 +16,7 @@ export function WorkshopQRCode({ joinCode }: WorkshopQRCodeProps) {
     setMounted(true);
   }, []);
 
-  const baseUrl =
-    process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
   const joinUrl = `${baseUrl}/join/${joinCode}`;
 
   // Determine colors based on theme

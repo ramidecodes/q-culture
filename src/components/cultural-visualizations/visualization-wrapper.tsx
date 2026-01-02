@@ -3,7 +3,7 @@ import { requireAuth } from "@/lib/auth";
 import { getVisualizationData } from "@/lib/db/queries/visualization-queries";
 import { VisualizationView } from "./visualization-view";
 import { VisualizationSkeleton } from "./visualization-skeleton";
-import type { Framework } from "@/lib/utils/cultural-distance";
+import type { Framework } from "@/types/cultural";
 import {
   Card,
   CardContent,

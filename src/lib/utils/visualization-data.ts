@@ -3,9 +3,9 @@
  * Transforms distance matrices into formats suitable for visualization
  */
 
-import type { Framework } from "@/lib/actions/grouping-actions";
+import type { Framework } from "@/types/cultural";
 import { generateDistanceMatrix } from "./distance-matrix";
-import { getCountryCulturalData } from "@/lib/db/queries/country-queries";
+import { getCulturalDataForCountries } from "@/lib/db/queries/country-queries";
 
 export type Participant = {
   id: string;
@@ -136,22 +136,22 @@ export function transformDistanceMatrixToHeatmap(
 }
 
 /**
- * Computes distance matrix for participants with a given framework
+ * Computes distance matrix for participants with a given framework.
+ * Uses batch query to fetch all cultural data in a single round-trip.
  */
 export async function computeDistanceMatrixForParticipants(
   participants: Participant[],
   framework: Framework
 ): Promise<Map<string, Map<string, number>>> {
-  // Get cultural scores for each participant
-  const participantsWithScores = await Promise.all(
-    participants.map(async (p) => {
-      const culturalData = await getCountryCulturalData(p.countryCode);
-      return {
-        id: p.id,
-        culturalScores: culturalData,
-      };
-    })
-  );
+  // Get cultural scores for all participants in a single batch query
+  const countryCodes = participants.map((p) => p.countryCode);
+  const culturalDataMap = await getCulturalDataForCountries(countryCodes);
+
+  // Build participants with scores
+  const participantsWithScores = participants.map((p) => ({
+    id: p.id,
+    culturalScores: culturalDataMap.get(p.countryCode) ?? {},
+  }));
 
   // Generate distance matrix
   return generateDistanceMatrix(participantsWithScores, framework);

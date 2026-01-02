@@ -4,34 +4,22 @@
  * their countries' cultural dimension scores.
  */
 
-export type Framework = "lewis" | "hall" | "hofstede" | "combined";
+// Re-export types from centralized location for backward compatibility
+export type {
+  Framework,
+  LewisScores,
+  HallScores,
+  HofstedeScores,
+  CulturalScores,
+} from "@/types/cultural";
 
-export type LewisScores = {
-  linearActive: number;
-  multiActive: number;
-  reactive: number;
-};
-
-export type HallScores = {
-  contextHigh: number;
-  timePolychronic: number;
-  spacePrivate: number;
-};
-
-export type HofstedeScores = {
-  powerDistance: number;
-  individualism: number;
-  masculinity: number;
-  uncertaintyAvoidance: number;
-  longTermOrientation: number;
-  indulgence: number;
-};
-
-export type CulturalScores = {
-  lewis?: LewisScores;
-  hall?: HallScores;
-  hofstede?: HofstedeScores;
-};
+import type {
+  Framework,
+  LewisScores,
+  HallScores,
+  HofstedeScores,
+  CulturalScores,
+} from "@/types/cultural";
 
 /**
  * Computes cultural distance between two sets of cultural scores

@@ -19,7 +19,10 @@ export function ReflectionList({ reflections }: ReflectionListProps) {
   }
 
   return (
-    <Tabs defaultValue={`group-${reflections[0].groupNumber}`} className="w-full">
+    <Tabs
+      defaultValue={`group-${reflections[0].groupNumber}`}
+      className="w-full"
+    >
       <TabsList className="flex flex-wrap gap-2">
         {reflections.map((group) => (
           <TabsTrigger

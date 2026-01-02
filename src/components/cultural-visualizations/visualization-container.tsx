@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/card";
 import { NetworkGraph } from "./network-graph";
 import { DistanceMatrixHeatmap } from "./distance-matrix-heatmap";
-import type { Framework } from "@/lib/utils/cultural-distance";
+import type { Framework } from "@/types/cultural";
 import { Loader2 } from "lucide-react";
 
 type VisualizationContainerProps = {
