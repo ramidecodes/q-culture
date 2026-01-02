@@ -1,0 +1,2 @@
+ALTER TABLE "participants" DROP CONSTRAINT "participants_session_token_unique";--> statement-breakpoint
+CREATE UNIQUE INDEX "participants_workshop_session_unique" ON "participants" USING btree ("workshop_id","session_token");
