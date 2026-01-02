@@ -11,7 +11,10 @@ export async function GET({ params }: RouteParams) {
     const { id: workshopId } = await params;
     const facilitatorId = await requireAuth();
 
-    const distribution = await getCountryDistribution(workshopId, facilitatorId);
+    const distribution = await getCountryDistribution(
+      workshopId,
+      facilitatorId
+    );
 
     return NextResponse.json(distribution);
   } catch (error) {

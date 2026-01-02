@@ -14,7 +14,9 @@ type ParticipantPageProps = {
   params: Promise<{ token: string }>;
 };
 
-export default async function ParticipantPage({ params }: ParticipantPageProps) {
+export default async function ParticipantPage({
+  params,
+}: ParticipantPageProps) {
   const { token } = await params;
 
   // Find participant by session token

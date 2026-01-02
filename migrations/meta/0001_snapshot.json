@@ -71,12 +71,8 @@
           "name": "hall_scores_country_code_countries_iso_code_fk",
           "tableFrom": "hall_scores",
           "tableTo": "countries",
-          "columnsFrom": [
-            "country_code"
-          ],
-          "columnsTo": [
-            "iso_code"
-          ],
+          "columnsFrom": ["country_code"],
+          "columnsTo": ["iso_code"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -140,12 +136,8 @@
           "name": "hofstede_scores_country_code_countries_iso_code_fk",
           "tableFrom": "hofstede_scores",
           "tableTo": "countries",
-          "columnsFrom": [
-            "country_code"
-          ],
-          "columnsTo": [
-            "iso_code"
-          ],
+          "columnsFrom": ["country_code"],
+          "columnsTo": ["iso_code"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -191,12 +183,8 @@
           "name": "lewis_scores_country_code_countries_iso_code_fk",
           "tableFrom": "lewis_scores",
           "tableTo": "countries",
-          "columnsFrom": [
-            "country_code"
-          ],
-          "columnsTo": [
-            "iso_code"
-          ],
+          "columnsFrom": ["country_code"],
+          "columnsTo": ["iso_code"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -230,12 +218,8 @@
           "name": "group_members_group_id_groups_id_fk",
           "tableFrom": "group_members",
           "tableTo": "groups",
-          "columnsFrom": [
-            "group_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["group_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -243,12 +227,8 @@
           "name": "group_members_participant_id_participants_id_fk",
           "tableFrom": "group_members",
           "tableTo": "participants",
-          "columnsFrom": [
-            "participant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["participant_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -256,10 +236,7 @@
       "compositePrimaryKeys": {
         "group_members_group_id_participant_id_pk": {
           "name": "group_members_group_id_participant_id_pk",
-          "columns": [
-            "group_id",
-            "participant_id"
-          ]
+          "columns": ["group_id", "participant_id"]
         }
       },
       "uniqueConstraints": {},
@@ -304,12 +281,8 @@
           "name": "groups_workshop_id_workshops_id_fk",
           "tableFrom": "groups",
           "tableTo": "workshops",
-          "columnsFrom": [
-            "workshop_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["workshop_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -391,12 +364,8 @@
           "name": "participants_workshop_id_workshops_id_fk",
           "tableFrom": "participants",
           "tableTo": "workshops",
-          "columnsFrom": [
-            "workshop_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["workshop_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -404,12 +373,8 @@
           "name": "participants_country_code_countries_iso_code_fk",
           "tableFrom": "participants",
           "tableTo": "countries",
-          "columnsFrom": [
-            "country_code"
-          ],
-          "columnsTo": [
-            "iso_code"
-          ],
+          "columnsFrom": ["country_code"],
+          "columnsTo": ["iso_code"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -463,12 +428,8 @@
           "name": "reflections_participant_id_participants_id_fk",
           "tableFrom": "reflections",
           "tableTo": "participants",
-          "columnsFrom": [
-            "participant_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["participant_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -476,12 +437,8 @@
           "name": "reflections_group_id_groups_id_fk",
           "tableFrom": "reflections",
           "tableTo": "groups",
-          "columnsFrom": [
-            "group_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["group_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -491,9 +448,7 @@
         "reflections_participant_id_unique": {
           "name": "reflections_participant_id_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "participant_id"
-          ]
+          "columns": ["participant_id"]
         }
       },
       "policies": {},
@@ -578,9 +533,7 @@
         "workshops_join_code_unique": {
           "name": "workshops_join_code_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "join_code"
-          ]
+          "columns": ["join_code"]
         }
       },
       "policies": {},
@@ -592,22 +545,12 @@
     "public.framework": {
       "name": "framework",
       "schema": "public",
-      "values": [
-        "lewis",
-        "hall",
-        "hofstede",
-        "combined"
-      ]
+      "values": ["lewis", "hall", "hofstede", "combined"]
     },
     "public.workshop_status": {
       "name": "workshop_status",
       "schema": "public",
-      "values": [
-        "draft",
-        "collecting",
-        "grouped",
-        "closed"
-      ]
+      "values": ["draft", "collecting", "grouped", "closed"]
     }
   },
   "schemas": {},

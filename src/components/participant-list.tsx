@@ -41,10 +41,7 @@ export function ParticipantList({ workshopId }: ParticipantListProps) {
         <div className="h-6 w-32 bg-muted animate-pulse rounded" />
         <div className="grid gap-4">
           {[1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className="h-20 bg-muted animate-pulse rounded-lg"
-            />
+            <div key={i} className="h-20 bg-muted animate-pulse rounded-lg" />
           ))}
         </div>
       </div>
@@ -65,7 +62,9 @@ export function ParticipantList({ workshopId }: ParticipantListProps) {
   if (!data || data.length === 0) {
     return (
       <div className="text-center py-8">
-        <p className="text-muted-foreground">No participants have joined yet.</p>
+        <p className="text-muted-foreground">
+          No participants have joined yet.
+        </p>
         <p className="text-sm text-muted-foreground mt-2">
           Share the join code to invite participants
         </p>

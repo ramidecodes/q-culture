@@ -1,12 +1,7 @@
 "use client";
 
 import useSWR from "swr";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { getCountryFlag } from "@/lib/utils/country-flag";
 
@@ -28,9 +23,7 @@ type CountryDistributionProps = {
   workshopId: string;
 };
 
-export function CountryDistribution({
-  workshopId,
-}: CountryDistributionProps) {
+export function CountryDistribution({ workshopId }: CountryDistributionProps) {
   const { data, isLoading, error } = useSWR<CountryDistributionItem[]>(
     `/api/workshop/${workshopId}/country-distribution`,
     fetcher,
@@ -46,10 +39,7 @@ export function CountryDistribution({
         <CardContent>
           <div className="space-y-2">
             {[1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="h-8 bg-muted animate-pulse rounded"
-              />
+              <div key={i} className="h-8 bg-muted animate-pulse rounded" />
             ))}
           </div>
         </CardContent>

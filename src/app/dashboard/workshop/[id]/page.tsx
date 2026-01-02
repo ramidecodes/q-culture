@@ -1,4 +1,5 @@
-import { Calendar } from "lucide-react";
+import { Calendar, Settings } from "lucide-react";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
   Card,
@@ -7,12 +8,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import { WorkshopJoinCode } from "@/components/workshop-join-code";
 import { WorkshopStateControls } from "@/components/workshop-state-controls";
 import { WorkshopStatusBadge } from "@/components/workshop-status-badge";
@@ -20,6 +17,9 @@ import { ParticipantList } from "@/components/participant-list";
 import { CountryDistribution } from "@/components/country-distribution";
 import { requireAuth } from "@/lib/auth";
 import { getWorkshopById } from "@/lib/db/queries/workshop-queries";
+import { db } from "@/lib/db";
+import { groups } from "@/lib/db/schema";
+import { eq, count } from "drizzle-orm";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -34,6 +34,14 @@ export default async function WorkshopPage({ params }: PageProps) {
   if (!workshop) {
     notFound();
   }
+
+  // Check if groups already generated
+  const groupsResult = await db
+    .select({ count: count() })
+    .from(groups)
+    .where(eq(groups.workshopId, id));
+
+  const hasGroups = (groupsResult[0]?.count ?? 0) > 0;
 
   return (
     <div className="container max-w-4xl py-8 space-y-6">
@@ -98,13 +106,15 @@ export default async function WorkshopPage({ params }: PageProps) {
                 <div className="mt-1 text-sm">{workshop.framework}</div>
               </div>
             )}
-            {workshop.groupSize && (
+            {workshop.groupSize !== undefined && (
               <div>
                 <div className="text-sm font-medium text-muted-foreground">
                   Group Size
                 </div>
                 <div className="mt-1 text-sm">
-                  {workshop.groupSize} participants per group
+                  {workshop.groupSize === null
+                    ? "Flexible (3-4 participants)"
+                    : `${workshop.groupSize} participants per group`}
                 </div>
               </div>
             )}
@@ -159,6 +169,16 @@ export default async function WorkshopPage({ params }: PageProps) {
                     workshopId={workshop.id}
                     currentStatus={workshop.status}
                   />
+                </div>
+              )}
+              {!hasGroups && workshop.status !== "closed" && (
+                <div>
+                  <Button asChild variant="outline">
+                    <Link href={`/dashboard/workshop/${id}/configure`}>
+                      <Settings className="mr-2 h-4 w-4" />
+                      Configure Grouping
+                    </Link>
+                  </Button>
                 </div>
               )}
             </CardContent>

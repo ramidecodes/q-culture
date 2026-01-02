@@ -11,7 +11,10 @@ export async function GET({ params }: RouteParams) {
     const { id: workshopId } = await params;
     const facilitatorId = await requireAuth();
 
-    const participants = await getWorkshopParticipants(workshopId, facilitatorId);
+    const participants = await getWorkshopParticipants(
+      workshopId,
+      facilitatorId
+    );
 
     return NextResponse.json(participants);
   } catch (error) {
