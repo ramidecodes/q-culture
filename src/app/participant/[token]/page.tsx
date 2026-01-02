@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { getParticipantGroup } from "@/lib/db/queries/participant-queries";
 import { ParticipantGroupCard } from "@/components/participant-group-card";
 import { GroupAssignmentPoller } from "@/components/group-assignment-poller";
@@ -9,6 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 type ParticipantPageProps = {
   params: Promise<{ token: string }>;
@@ -50,7 +52,7 @@ export default async function ParticipantPage({
   }
 
   return (
-    <div className="container max-w-2xl py-8">
+    <div className="container max-w-2xl py-8 space-y-4">
       <Card>
         <CardHeader>
           <CardTitle>Welcome, {data.participant.name}!</CardTitle>
@@ -64,6 +66,24 @@ export default async function ParticipantPage({
             members={data.members}
             currentParticipantId={data.participant.id}
           />
+        </CardContent>
+      </Card>
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex flex-col gap-4">
+            <div>
+              <h3 className="text-lg font-semibold mb-2">
+                Submit Your Reflection
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                After your group discussion, share your thoughts and insights
+                with the facilitator.
+              </p>
+            </div>
+            <Link href={`/participant/${token}/reflect`}>
+              <Button className="w-full">Submit Reflection</Button>
+            </Link>
+          </div>
         </CardContent>
       </Card>
     </div>
