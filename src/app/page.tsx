@@ -1,3 +1,6 @@
+import Link from "next/link";
+import { GetStartedButton } from "@/components/get-started-button";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -7,10 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { GetStartedButton } from "@/components/get-started-button";
-import Link from "next/link";
 
 export default function Home() {
   return (

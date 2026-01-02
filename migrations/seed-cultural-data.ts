@@ -1,7 +1,8 @@
 // Environment variables are loaded via tsx --env-file flag in package.json
-import { seedLewisData } from "./seed-lewis-data";
+
 import { seedHallData } from "./seed-hall-data";
 import { seedHofstedeData } from "./seed-hofstede-data";
+import { seedLewisData } from "./seed-lewis-data";
 
 /**
  * Main seed function that loads all cultural framework data

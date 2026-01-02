@@ -1,6 +1,6 @@
-import { ThemeToggle } from "@/components/theme-toggle";
-import { AuthControls } from "@/components/auth-controls";
 import Link from "next/link";
+import { AuthControls } from "@/components/auth-controls";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export function Header() {
   return (

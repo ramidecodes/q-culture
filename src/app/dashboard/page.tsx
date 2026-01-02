@@ -1,8 +1,14 @@
 import { currentUser } from "@clerk/nextjs/server";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
 import { Plus } from "lucide-react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 export default async function DashboardPage() {
   const user = await currentUser();
@@ -13,7 +19,11 @@ export default async function DashboardPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
           <p className="text-muted-foreground">
-            Welcome back, {user?.firstName || user?.emailAddresses[0]?.emailAddress || "Facilitator"}!
+            Welcome back,{" "}
+            {user?.firstName ||
+              user?.emailAddresses[0]?.emailAddress ||
+              "Facilitator"}
+            !
           </p>
         </div>
         <Button asChild>

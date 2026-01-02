@@ -1,11 +1,17 @@
+import { Calendar } from "lucide-react";
 import { notFound } from "next/navigation";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { WorkshopJoinCode } from "@/components/workshop-join-code";
+import { WorkshopStateControls } from "@/components/workshop-state-controls";
+import { WorkshopStatusBadge } from "@/components/workshop-status-badge";
 import { requireAuth } from "@/lib/auth";
 import { getWorkshopById } from "@/lib/db/queries/workshop-queries";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { WorkshopStatusBadge } from "@/components/workshop-status-badge";
-import { WorkshopStateControls } from "@/components/workshop-state-controls";
-import { Calendar } from "lucide-react";
-import { WorkshopJoinCode } from "@/components/workshop-join-code";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -26,18 +32,23 @@ export default async function WorkshopPage({ params }: PageProps) {
       <div className="flex items-start justify-between">
         <div className="space-y-2">
           <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-bold tracking-tight">{workshop.title}</h1>
+            <h1 className="text-3xl font-bold tracking-tight">
+              {workshop.title}
+            </h1>
             <WorkshopStatusBadge status={workshop.status} />
           </div>
           {workshop.date && (
             <div className="flex items-center gap-2 text-muted-foreground">
               <Calendar className="h-4 w-4" />
               <span>
-                {new Date(workshop.date + "T00:00:00").toLocaleDateString("en-US", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })}
+                {new Date(`${workshop.date}T00:00:00`).toLocaleDateString(
+                  "en-US",
+                  {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  }
+                )}
               </span>
             </div>
           )}
@@ -64,25 +75,35 @@ export default async function WorkshopPage({ params }: PageProps) {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <div className="text-sm font-medium text-muted-foreground">Status</div>
+              <div className="text-sm font-medium text-muted-foreground">
+                Status
+              </div>
               <div className="mt-1">
                 <WorkshopStatusBadge status={workshop.status} />
               </div>
             </div>
             {workshop.framework && (
               <div>
-                <div className="text-sm font-medium text-muted-foreground">Framework</div>
+                <div className="text-sm font-medium text-muted-foreground">
+                  Framework
+                </div>
                 <div className="mt-1 text-sm">{workshop.framework}</div>
               </div>
             )}
             {workshop.groupSize && (
               <div>
-                <div className="text-sm font-medium text-muted-foreground">Group Size</div>
-                <div className="mt-1 text-sm">{workshop.groupSize} participants per group</div>
+                <div className="text-sm font-medium text-muted-foreground">
+                  Group Size
+                </div>
+                <div className="mt-1 text-sm">
+                  {workshop.groupSize} participants per group
+                </div>
               </div>
             )}
             <div>
-              <div className="text-sm font-medium text-muted-foreground">Created</div>
+              <div className="text-sm font-medium text-muted-foreground">
+                Created
+              </div>
               <div className="mt-1 text-sm">
                 {new Date(workshop.createdAt).toLocaleDateString("en-US", {
                   year: "numeric",
@@ -106,18 +127,14 @@ export default async function WorkshopPage({ params }: PageProps) {
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            {workshop.status === "draft" && (
-              "Your workshop is in draft mode. Start collecting participants when you're ready."
-            )}
-            {workshop.status === "collecting" && (
-              "Your workshop is accepting participants. Share the join code to invite people."
-            )}
-            {workshop.status === "grouped" && (
-              "Participants have been assigned to groups. They can now view their groups and submit reflections."
-            )}
-            {workshop.status === "closed" && (
-              "This workshop is closed. No further actions can be taken."
-            )}
+            {workshop.status === "draft" &&
+              "Your workshop is in draft mode. Start collecting participants when you're ready."}
+            {workshop.status === "collecting" &&
+              "Your workshop is accepting participants. Share the join code to invite people."}
+            {workshop.status === "grouped" &&
+              "Participants have been assigned to groups. They can now view their groups and submit reflections."}
+            {workshop.status === "closed" &&
+              "This workshop is closed. No further actions can be taken."}
           </p>
           {workshop.status !== "closed" && (
             <div>

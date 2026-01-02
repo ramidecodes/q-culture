@@ -1,9 +1,9 @@
 "use client";
 
+import { Check, Copy } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Copy, Check } from "lucide-react";
 
 export function WorkshopJoinCode({ joinCode }: { joinCode: string }) {
   const [copied, setCopied] = useState(false);

@@ -5,10 +5,7 @@ export default function NotFound() {
       <p className="text-muted-foreground mb-4">
         Could not find requested resource
       </p>
-      <a
-        href="/"
-        className="text-primary hover:underline"
-      >
+      <a href="/" className="text-primary hover:underline">
         Return Home
       </a>
     </div>

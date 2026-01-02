@@ -1,6 +1,12 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 export default function WorkshopNotFound() {
   return (
@@ -9,7 +15,8 @@ export default function WorkshopNotFound() {
         <CardHeader>
           <CardTitle>Workshop Not Found</CardTitle>
           <CardDescription>
-            The workshop you're looking for doesn't exist or you don't have access to it.
+            The workshop you're looking for doesn't exist or you don't have
+            access to it.
           </CardDescription>
         </CardHeader>
         <CardContent>

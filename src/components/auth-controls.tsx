@@ -1,8 +1,8 @@
 "use client";
 
-import { useAuth, UserButton } from "@clerk/nextjs";
-import { Button } from "@/components/ui/button";
+import { UserButton, useAuth } from "@clerk/nextjs";
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 export function AuthControls() {
   const { isSignedIn, isLoaded } = useAuth();

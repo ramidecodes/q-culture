@@ -1,10 +1,18 @@
 "use client";
 
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import {
   Form,
   FormControl,
@@ -14,13 +22,14 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import { createWorkshop } from "@/lib/actions/workshop-actions";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 const workshopSchema = z.object({
-  title: z.string().min(1, "Title is required").max(200, "Title must be 200 characters or less"),
+  title: z
+    .string()
+    .min(1, "Title is required")
+    .max(200, "Title must be 200 characters or less"),
   date: z.string().optional(),
 });
 
@@ -49,16 +58,16 @@ export default function NewWorkshopPage() {
         date: data.date || undefined,
       });
 
-      if (result.error) {
+      if ("error" in result) {
         setError(result.error);
         setIsSubmitting(false);
         return;
       }
 
-      if (result.success) {
+      if ("success" in result && result.success) {
         router.push(`/dashboard/workshop/${result.workshop.id}`);
       }
-    } catch (err) {
+    } catch (_err) {
       setError("An unexpected error occurred. Please try again.");
       setIsSubmitting(false);
     }
@@ -70,8 +79,8 @@ export default function NewWorkshopPage() {
         <CardHeader>
           <CardTitle>Create New Workshop</CardTitle>
           <CardDescription>
-            Create a new cultural diversity workshop. A unique join code will be generated
-            automatically.
+            Create a new cultural diversity workshop. A unique join code will be
+            generated automatically.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -105,11 +114,7 @@ export default function NewWorkshopPage() {
                   <FormItem>
                     <FormLabel>Workshop Date (Optional)</FormLabel>
                     <FormControl>
-                      <Input
-                        type="date"
-                        {...field}
-                        disabled={isSubmitting}
-                      />
+                      <Input type="date" {...field} disabled={isSubmitting} />
                     </FormControl>
                     <FormDescription>
                       The scheduled date for this workshop (optional)

@@ -1,6 +1,12 @@
-import { pgTable, uuid, integer, timestamp, primaryKey } from "drizzle-orm/pg-core";
-import { workshops } from "./workshops";
+import {
+  integer,
+  pgTable,
+  primaryKey,
+  timestamp,
+  uuid,
+} from "drizzle-orm/pg-core";
 import { participants } from "./participants";
+import { workshops } from "./workshops";
 
 export const groups = pgTable("groups", {
   id: uuid("id").defaultRandom().primaryKey(),

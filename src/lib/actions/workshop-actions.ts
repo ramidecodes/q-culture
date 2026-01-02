@@ -1,12 +1,11 @@
 "use server";
 
-import { redirect } from "next/navigation";
-import { db } from "@/lib/db";
-import { workshops, groups } from "@/lib/db/schema";
-import type { WorkshopStatus } from "@/lib/db/schema/workshops";
+import { and, eq } from "drizzle-orm";
 import { requireAuth } from "@/lib/auth";
+import { db } from "@/lib/db";
+import { groups, workshops } from "@/lib/db/schema";
+import type { WorkshopStatus } from "@/lib/db/schema/workshops";
 import { generateJoinCode } from "@/lib/utils/join-code";
-import { eq, and } from "drizzle-orm";
 
 type CreateWorkshopData = {
   title: string;
@@ -66,7 +65,7 @@ export async function createWorkshop(
   let parsedDate: Date | null = null;
   if (data.date && data.date.trim().length > 0) {
     parsedDate = new Date(data.date);
-    if (isNaN(parsedDate.getTime())) {
+    if (Number.isNaN(parsedDate.getTime())) {
       return { error: "Invalid date format" };
     }
   }

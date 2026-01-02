@@ -1,6 +1,6 @@
+import { and, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { workshops } from "@/lib/db/schema";
-import { eq, and } from "drizzle-orm";
 
 /**
  * Fetches a workshop by ID, ensuring the facilitator owns it.

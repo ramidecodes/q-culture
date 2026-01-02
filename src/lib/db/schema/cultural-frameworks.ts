@@ -1,4 +1,4 @@
-import { pgTable, text, numeric } from "drizzle-orm/pg-core";
+import { numeric, pgTable, text } from "drizzle-orm/pg-core";
 import { countries } from "./countries";
 
 export const lewisScores = pgTable("lewis_scores", {

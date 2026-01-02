@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { updateWorkshopStatus } from "@/lib/actions/workshop-actions";
 import type { WorkshopStatus } from "@/lib/db/schema/workshops";
@@ -25,7 +25,7 @@ export function WorkshopStateControls({
     startTransition(async () => {
       const result = await updateWorkshopStatus(workshopId, newStatus);
 
-      if (result?.error) {
+      if ("error" in result) {
         setError(result.error);
         return;
       }
@@ -63,9 +63,7 @@ export function WorkshopStateControls({
           </Button>
         )}
       </div>
-      {error && (
-        <p className="text-sm text-destructive">{error}</p>
-      )}
+      {error && <p className="text-sm text-destructive">{error}</p>}
     </div>
   );
 }
