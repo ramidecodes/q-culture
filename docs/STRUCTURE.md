@@ -45,30 +45,61 @@ Next.js App Router structure defining the application's routes and pages:
 - **`globals.css`** - Global styles and Tailwind directives
 - **`error.tsx`** - Global error boundary
 - **`not-found.tsx`** - 404 page
-- **`dashboard/`** - Facilitator dashboard (protected route)
-- **`sign-in/`** - Authentication sign-in page (Clerk)
-- **`sign-up/`** - Authentication sign-up page (Clerk)
 - **`middleware.ts`** - Next.js middleware for route protection
+- **`dashboard/`** - Facilitator dashboard (protected route)
+  - **`page.tsx`** - Dashboard home page
+  - **`layout.tsx`** - Dashboard layout wrapper
+  - **`new-workshop/page.tsx`** - Workshop creation page
+  - **`workshop/[id]/`** - Individual workshop management
+    - **`page.tsx`** - Workshop overview page
+    - **`configure/page.tsx`** - Workshop configuration page
+    - **`not-found.tsx`** - Workshop not found page
+- **`join/[code]/page.tsx`** - Participant join page (public route)
+- **`participant/[token]/page.tsx`** - Participant view page (public route)
+- **`sign-in/[[...sign-in]]/page.tsx`** - Authentication sign-in page (Clerk)
+- **`sign-up/[[...sign-up]]/page.tsx`** - Authentication sign-up page (Clerk)
+- **`api/`** - API route handlers
+  - **`workshop/[id]/`** - Workshop-related API endpoints
+    - **`country-distribution/route.ts`** - Get country distribution for a workshop
+    - **`participants/route.ts`** - Get participants for a workshop
 
 ### Components (`src/components/`)
 
 Reusable React components organized by purpose:
 
 - **`ui/`** - ShadCN UI component library (buttons, forms, dialogs, etc.)
+  - `badge.tsx`, `button.tsx`, `card.tsx`, `dialog.tsx`, `form.tsx`, `input.tsx`, `label.tsx`, `radio-group.tsx`, `select.tsx`, `separator.tsx`, `tabs.tsx`, `textarea.tsx`
 - **`auth-controls.tsx`** - Authentication UI controls
+- **`country-distribution.tsx`** - Country distribution visualization component
+- **`country-select.tsx`** - Country selection dropdown component
+- **`generate-groups-button.tsx`** - Button component for triggering group generation
 - **`get-started-button.tsx`** - Call-to-action button component
+- **`grouping-config-form.tsx`** - Form for configuring group generation parameters
 - **`header.tsx`** - Application header/navigation
+- **`participant-card.tsx`** - Individual participant card component
+- **`participant-join-form.tsx`** - Form for participants to join a workshop
+- **`participant-list.tsx`** - List view of workshop participants
 - **`theme-provider.tsx`** - Theme context provider (dark/light mode)
 - **`theme-toggle.tsx`** - Theme switcher component
+- **`workshop-join-code.tsx`** - Component displaying workshop join code
+- **`workshop-state-controls.tsx`** - Controls for managing workshop state
+- **`workshop-status-badge.tsx`** - Badge component for workshop status display
 
 ### Library Code (`src/lib/`)
 
 Core application logic and utilities:
 
-- **`auth.ts`** - Authentication utilities and helpers
+- **`auth.ts`** - Authentication utilities and helpers (Clerk integration)
 - **`utils.ts`** - Shared utility functions (e.g., `cn()` for class merging)
+- **`actions/`** - Server actions for data mutations:
+  - **`grouping-actions.ts`** - Actions for group generation and management
+  - **`participant-actions.ts`** - Actions for participant operations
+  - **`workshop-actions.ts`** - Actions for workshop CRUD operations
 - **`db/`** - Database layer:
-  - **`index.ts`** - Database connection and client setup
+  - **`index.ts`** - Database connection and client setup (Drizzle + Supabase)
+  - **`queries/`** - Database query functions:
+    - `country-queries.ts` - Country data queries
+    - `workshop-queries.ts` - Workshop data queries
   - **`schema/`** - Drizzle ORM schema definitions:
     - `countries.ts` - Country reference data
     - `cultural-frameworks.ts` - Cultural framework scores
@@ -77,6 +108,12 @@ Core application logic and utilities:
     - `groups.ts` - Group assignments
     - `reflections.ts` - Participant reflection submissions
     - `index.ts` - Schema exports
+- **`utils/`** - Specialized utility functions:
+  - **`country-flag.ts`** - Country flag emoji utilities
+  - **`cultural-distance.ts`** - Cultural distance computation algorithms
+  - **`distance-matrix.ts`** - Distance matrix generation utilities
+  - **`group-assignment.ts`** - Group assignment algorithm implementations
+  - **`join-code.ts`** - Workshop join code generation and validation
 
 ### Types (`src/types/`)
 
@@ -87,7 +124,11 @@ TypeScript type definitions and interfaces for the application.
 Drizzle ORM migration files:
 
 - **`meta/`** - Migration metadata and journal
-- SQL migration files (e.g., `0000_large_devos.sql`)
+- SQL migration files (e.g., `0000_large_devos.sql`, `0001_abandoned_blonde_phantom.sql`)
+- **`seed-cultural-data.ts`** - Seed script for cultural framework data
+- **`seed-hall-data.ts`** - Seed script for Hall framework data
+- **`seed-hofstede-data.ts`** - Seed script for Hofstede framework data
+- **`seed-lewis-data.ts`** - Seed script for Lewis framework data
 
 ## Public Assets (`public/`)
 
@@ -103,17 +144,25 @@ Static files served directly by Next.js (images, icons, etc.).
 ### Component Organization
 - UI components in `components/ui/` (ShadCN)
 - Feature-specific components at `components/` root
-- Shared utilities in `lib/`
+- Shared utilities in `lib/utils/` and `lib/utils.ts`
+- Server actions in `lib/actions/` for data mutations
+- Database queries in `lib/db/queries/` for data fetching
 
 ### Database Layer
 - Drizzle ORM for type-safe database queries
+- Supabase as the PostgreSQL database provider
 - Schema definitions separated by domain
+- Query functions organized in `db/queries/` directory
+- Server actions in `lib/actions/` for data mutations
 - Migrations managed through Drizzle Kit
+- Seed scripts for cultural reference data
 
 ### Authentication
 - Clerk for facilitator authentication
-- Middleware-based route protection
-- Anonymous session management for participants
+- Middleware-based route protection using `clerkMiddleware`
+- Public routes: `/`, `/join/*`, `/participant/*`, `/sign-in/*`, `/sign-up/*`
+- Protected routes: All dashboard routes require authentication
+- Anonymous session management for participants (token-based)
 
 ### Styling
 - Tailwind CSS for utility-first styling
