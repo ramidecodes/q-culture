@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { GroupingConfigForm } from "@/components/grouping-config-form";
+import { GenerateGroupsButton } from "@/components/generate-groups-button";
 import { requireAuth } from "@/lib/auth";
 import { getWorkshopById } from "@/lib/db/queries/workshop-queries";
 import { eq, count } from "drizzle-orm";
@@ -93,6 +94,34 @@ export default async function ConfigureGroupingPage({ params }: PageProps) {
           />
         </CardContent>
       </Card>
+
+      {!hasGroups &&
+        workshop.status !== "closed" &&
+        workshop.framework &&
+        workshop.groupSize !== null && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Generate Groups</CardTitle>
+              <CardDescription>
+                Once your configuration is saved, you can generate groups. The
+                algorithm will create maximally diverse groups based on cultural
+                distances.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {(() => {
+                // Check participant count client-side would require an API call
+                // For now, server-side validation will handle this
+                return (
+                  <GenerateGroupsButton
+                    workshopId={id}
+                    disabled={workshop.status === "closed"}
+                  />
+                );
+              })()}
+            </CardContent>
+          </Card>
+        )}
     </div>
   );
 }

@@ -15,6 +15,7 @@ import { WorkshopStateControls } from "@/components/workshop-state-controls";
 import { WorkshopStatusBadge } from "@/components/workshop-status-badge";
 import { ParticipantList } from "@/components/participant-list";
 import { CountryDistribution } from "@/components/country-distribution";
+import { GenerateGroupsButton } from "@/components/generate-groups-button";
 import { requireAuth } from "@/lib/auth";
 import { getWorkshopById } from "@/lib/db/queries/workshop-queries";
 import { db } from "@/lib/db";
@@ -172,13 +173,45 @@ export default async function WorkshopPage({ params }: PageProps) {
                 </div>
               )}
               {!hasGroups && workshop.status !== "closed" && (
-                <div>
-                  <Button asChild variant="outline">
-                    <Link href={`/dashboard/workshop/${id}/configure`}>
-                      <Settings className="mr-2 h-4 w-4" />
-                      Configure Grouping
-                    </Link>
-                  </Button>
+                <div className="space-y-4">
+                  {(!workshop.framework || workshop.groupSize === null) && (
+                    <div>
+                      <Button asChild variant="outline">
+                        <Link href={`/dashboard/workshop/${id}/configure`}>
+                          <Settings className="mr-2 h-4 w-4" />
+                          Configure Grouping
+                        </Link>
+                      </Button>
+                    </div>
+                  )}
+                  {workshop.framework &&
+                    workshop.groupSize !== null &&
+                    workshop.status !== "closed" && (
+                      <div className="space-y-4">
+                        <div>
+                          <div className="text-sm font-medium mb-2">
+                            Ready to Generate Groups
+                          </div>
+                          <p className="text-sm text-muted-foreground mb-4">
+                            Your grouping configuration is complete. Click the
+                            button below to generate diverse groups based on
+                            cultural distances.
+                          </p>
+                          <GenerateGroupsButton
+                            workshopId={workshop.id}
+                            disabled={workshop.status === "closed"}
+                          />
+                        </div>
+                        <div>
+                          <Button asChild variant="outline" size="sm">
+                            <Link href={`/dashboard/workshop/${id}/configure`}>
+                              <Settings className="mr-2 h-4 w-4" />
+                              Change Configuration
+                            </Link>
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                 </div>
               )}
             </CardContent>
