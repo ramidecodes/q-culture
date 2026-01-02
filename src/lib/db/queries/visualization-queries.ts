@@ -49,6 +49,10 @@ export type VisualizationData = {
   };
 };
 
+export type VisualizationDataResult =
+  | { success: true; data: VisualizationData }
+  | { success: false; error: "workshop_not_found" | "insufficient_participants"; participantCount?: number };
+
 /**
  * Fetches and computes visualization data for a workshop.
  * Verifies that the facilitator owns the workshop.
@@ -56,17 +60,17 @@ export type VisualizationData = {
  * @param workshopId - ID of the workshop
  * @param facilitatorId - ID of the facilitator (for verification)
  * @param framework - Framework to use for distance calculation
- * @returns Visualization data or null if workshop not found
+ * @returns Visualization data result with success/error state
  */
 export async function getVisualizationData(
   workshopId: string,
   facilitatorId: string,
   framework: Framework
-): Promise<VisualizationData | null> {
+): Promise<VisualizationDataResult> {
   // Verify facilitator owns workshop
   const workshop = await getWorkshopById(workshopId, facilitatorId);
   if (!workshop) {
-    return null;
+    return { success: false, error: "workshop_not_found" };
   }
 
   // Get all participants
@@ -82,8 +86,24 @@ export async function getVisualizationData(
     .where(eq(participants.workshopId, workshopId))
     .orderBy(participants.createdAt);
 
+  // Debug logging
+  console.log("[getVisualizationData] Debug info:", {
+    workshopId,
+    facilitatorId,
+    participantCount: workshopParticipants.length,
+    participants: workshopParticipants.map((p) => ({
+      id: p.id,
+      name: p.name,
+      countryCode: p.countryCode,
+    })),
+  });
+
   if (workshopParticipants.length < 2) {
-    throw new Error("Need at least 2 participants for distance visualization");
+    return {
+      success: false,
+      error: "insufficient_participants",
+      participantCount: workshopParticipants.length,
+    };
   }
 
   const participantsData: Participant[] = workshopParticipants.map((p) => ({
@@ -142,8 +162,11 @@ export async function getVisualizationData(
   );
 
   return {
-    framework,
-    graphData,
-    heatmapData,
+    success: true,
+    data: {
+      framework,
+      graphData,
+      heatmapData,
+    },
   };
 }

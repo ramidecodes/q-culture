@@ -42,7 +42,7 @@ export default function Home() {
       <Separator />
 
       {/* Features Section */}
-      <section id="features" className="container mx-auto px-4 py-16">
+      <section id="features" className="container py-16">
         <div className="mb-12 text-center">
           <h2 className="mb-4 text-3xl font-bold tracking-tight">
             Key Features
@@ -172,7 +172,7 @@ export default function Home() {
       <Separator />
 
       {/* Tech Stack Section */}
-      <section className="container mx-auto px-4 py-16">
+      <section className="container py-16">
         <div className="mb-12 text-center">
           <h2 className="mb-4 text-3xl font-bold tracking-tight">
             Built With Modern Technology

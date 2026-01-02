@@ -22,19 +22,38 @@ async function VisualizationData({
   framework,
 }: VisualizationWrapperProps) {
   const userId = await requireAuth();
-  const data = await getVisualizationData(workshopId, userId, framework);
+  const result = await getVisualizationData(workshopId, userId, framework);
 
-  if (!data) {
-    return (
-      <div className="py-12">
-        <div className="text-center text-sm text-destructive">
-          Workshop not found or access denied
+  if (!result.success) {
+    if (result.error === "workshop_not_found") {
+      return (
+        <div className="py-12">
+          <div className="text-center text-sm text-destructive">
+            Workshop not found or access denied
+          </div>
         </div>
-      </div>
-    );
+      );
+    }
+
+    if (result.error === "insufficient_participants") {
+      return (
+        <div className="py-12">
+          <div className="text-center space-y-2">
+            <div className="text-sm text-muted-foreground">
+              At least 2 participants are needed for distance visualization
+            </div>
+            {result.participantCount !== undefined && (
+              <div className="text-xs text-muted-foreground">
+                Current participants: {result.participantCount}
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
   }
 
-  return <VisualizationView initialData={data} workshopId={workshopId} />;
+  return <VisualizationView initialData={result.data} workshopId={workshopId} />;
 }
 
 export function VisualizationWrapper({

@@ -93,69 +93,71 @@ export function WorkshopList({ workshops }: WorkshopListProps) {
 
   return (
     <>
-      <div className="space-y-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {workshops.map((workshop) => (
-          <Card
+          <Link
             key={workshop.id}
-            className="hover:bg-accent/50 transition-colors"
+            href={`/dashboard/workshop/${workshop.id}`}
+            className="block"
           >
-            <CardHeader className="pb-3">
-              <div className="flex items-start justify-between">
-                <div className="space-y-1 flex-1">
-                  <CardTitle className="text-xl">
-                    <Link
-                      href={`/dashboard/workshop/${workshop.id}`}
-                      className="hover:underline"
-                    >
+            <Card className="hover:bg-accent/50 transition-colors flex flex-col cursor-pointer h-full">
+              <CardHeader className="pb-3">
+                <div className="flex items-start justify-between">
+                  <div className="space-y-1 flex-1 min-w-0">
+                    <CardTitle className="text-xl truncate">
                       {workshop.title}
-                    </Link>
-                  </CardTitle>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <WorkshopStatusBadge status={workshop.status} />
-                    <span className="text-xs text-muted-foreground">
-                      Code: {workshop.joinCode}
+                    </CardTitle>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <WorkshopStatusBadge status={workshop.status} />
+                      <span className="text-xs text-muted-foreground">
+                        Code: {workshop.joinCode}
+                      </span>
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleDeleteClick(workshop);
+                    }}
+                    title="Delete workshop"
+                    className="text-destructive hover:text-destructive hover:bg-destructive/10 flex-shrink-0"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-2 flex-1">
+                <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+                  {workshop.date && (
+                    <div className="flex items-center gap-1">
+                      <Calendar className="h-4 w-4" />
+                      <span>{new Date(workshop.date).toLocaleDateString()}</span>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-1">
+                    <Users className="h-4 w-4" />
+                    <span>
+                      {workshop.participantCount}{" "}
+                      {workshop.participantCount === 1
+                        ? "participant"
+                        : "participants"}
                     </span>
                   </div>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => handleDeleteClick(workshop)}
-                  title="Delete workshop"
-                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                {workshop.date && (
-                  <div className="flex items-center gap-1">
-                    <Calendar className="h-4 w-4" />
-                    <span>{new Date(workshop.date).toLocaleDateString()}</span>
-                  </div>
+                {workshop.framework && (
+                  <CardDescription className="text-xs">
+                    Framework:{" "}
+                    {workshop.framework.charAt(0).toUpperCase() +
+                      workshop.framework.slice(1)}
+                    {workshop.groupSize && ` • Group size: ${workshop.groupSize}`}
+                  </CardDescription>
                 )}
-                <div className="flex items-center gap-1">
-                  <Users className="h-4 w-4" />
-                  <span>
-                    {workshop.participantCount}{" "}
-                    {workshop.participantCount === 1
-                      ? "participant"
-                      : "participants"}
-                  </span>
-                </div>
-              </div>
-              {workshop.framework && (
-                <CardDescription className="text-xs">
-                  Framework:{" "}
-                  {workshop.framework.charAt(0).toUpperCase() +
-                    workshop.framework.slice(1)}
-                  {workshop.groupSize && ` • Group size: ${workshop.groupSize}`}
-                </CardDescription>
-              )}
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </Link>
         ))}
       </div>
 
