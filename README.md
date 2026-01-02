@@ -4,7 +4,7 @@ Facilitator-led workshop web application that enables anonymous participants to 
 
 ## Tech Stack
 
-- **Framework**: Next.js 15 (App Router)
+- **Framework**: Next.js 16 (App Router)
 - **Language**: TypeScript
 - **Styling**: TailwindCSS
 - **Component Library**: ShadCN UI
@@ -18,17 +18,19 @@ Facilitator-led workshop web application that enables anonymous participants to 
 
 ### Prerequisites
 
-- Node.js 18+ 
-- pnpm 9+
+- Node.js 22+
+- pnpm 10+
 
 ### Installation
 
 1. Install dependencies:
+
 ```bash
 pnpm install
 ```
 
 2. Copy environment variables:
+
 ```bash
 cp .env.example .env
 ```
@@ -36,6 +38,7 @@ cp .env.example .env
 3. Update `.env` with your configuration values.
 
 4. Run the development server:
+
 ```bash
 pnpm dev
 ```
