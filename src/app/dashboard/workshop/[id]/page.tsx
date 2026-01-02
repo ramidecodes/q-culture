@@ -7,9 +7,17 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
 import { WorkshopJoinCode } from "@/components/workshop-join-code";
 import { WorkshopStateControls } from "@/components/workshop-state-controls";
 import { WorkshopStatusBadge } from "@/components/workshop-status-badge";
+import { ParticipantList } from "@/components/participant-list";
+import { CountryDistribution } from "@/components/country-distribution";
 import { requireAuth } from "@/lib/auth";
 import { getWorkshopById } from "@/lib/db/queries/workshop-queries";
 
@@ -118,37 +126,65 @@ export default async function WorkshopPage({ params }: PageProps) {
         </Card>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Workshop Overview</CardTitle>
-          <CardDescription>
-            Manage your workshop and track participant progress
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="text-sm text-muted-foreground">
-            {workshop.status === "draft" &&
-              "Your workshop is in draft mode. Start collecting participants when you're ready."}
-            {workshop.status === "collecting" &&
-              "Your workshop is accepting participants. Share the join code to invite people."}
-            {workshop.status === "grouped" &&
-              "Participants have been assigned to groups. They can now view their groups and submit reflections."}
-            {workshop.status === "closed" &&
-              "This workshop is closed. No further actions can be taken."}
-          </p>
-          {workshop.status !== "closed" && (
-            <div>
-              <div className="text-sm font-medium text-muted-foreground mb-2">
-                Workshop State
-              </div>
-              <WorkshopStateControls
-                workshopId={workshop.id}
-                currentStatus={workshop.status}
-              />
+      <Tabs defaultValue="overview" className="w-full">
+        <TabsList>
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="participants">Participants</TabsTrigger>
+        </TabsList>
+        <TabsContent value="overview" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Workshop Overview</CardTitle>
+              <CardDescription>
+                Manage your workshop and track participant progress
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                {workshop.status === "draft" &&
+                  "Your workshop is in draft mode. Start collecting participants when you're ready."}
+                {workshop.status === "collecting" &&
+                  "Your workshop is accepting participants. Share the join code to invite people."}
+                {workshop.status === "grouped" &&
+                  "Participants have been assigned to groups. They can now view their groups and submit reflections."}
+                {workshop.status === "closed" &&
+                  "This workshop is closed. No further actions can be taken."}
+              </p>
+              {workshop.status !== "closed" && (
+                <div>
+                  <div className="text-sm font-medium text-muted-foreground mb-2">
+                    Workshop State
+                  </div>
+                  <WorkshopStateControls
+                    workshopId={workshop.id}
+                    currentStatus={workshop.status}
+                  />
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+        <TabsContent value="participants" className="space-y-6">
+          <div className="grid gap-6 md:grid-cols-3">
+            <div className="md:col-span-2">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Participants</CardTitle>
+                  <CardDescription>
+                    View all participants who have joined your workshop
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ParticipantList workshopId={workshop.id} />
+                </CardContent>
+              </Card>
             </div>
-          )}
-        </CardContent>
-      </Card>
+            <div>
+              <CountryDistribution workshopId={workshop.id} />
+            </div>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
