@@ -16,6 +16,14 @@ import { getWorkshopById } from "@/lib/db/queries/workshop-queries";
 import { eq, count } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { groups } from "@/lib/db/schema";
+import type { GroupSize } from "@/lib/actions/grouping-actions";
+
+function toGroupSize(value: number | null): GroupSize {
+  if (value === 3 || value === 4 || value === null) {
+    return value;
+  }
+  return null;
+}
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -88,7 +96,7 @@ export default async function ConfigureGroupingPage({ params }: PageProps) {
             workshopId={id}
             currentConfig={{
               framework: workshop.framework,
-              groupSize: workshop.groupSize,
+              groupSize: toGroupSize(workshop.groupSize),
             }}
             disabled={isDisabled}
           />
@@ -109,16 +117,7 @@ export default async function ConfigureGroupingPage({ params }: PageProps) {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {(() => {
-                // Check participant count client-side would require an API call
-                // For now, server-side validation will handle this
-                return (
-                  <GenerateGroupsButton
-                    workshopId={id}
-                    disabled={workshop.status === "closed"}
-                  />
-                );
-              })()}
+              <GenerateGroupsButton workshopId={id} />
             </CardContent>
           </Card>
         )}

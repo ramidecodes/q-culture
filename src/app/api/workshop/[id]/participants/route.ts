@@ -2,11 +2,11 @@ import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/auth";
 import { getWorkshopParticipants } from "@/lib/db/queries/workshop-queries";
 
-type RouteParams = {
+type RouteContext = {
   params: Promise<{ id: string }>;
 };
 
-export async function GET({ params }: RouteParams) {
+export async function GET(_request: Request, { params }: RouteContext) {
   try {
     const { id: workshopId } = await params;
     const facilitatorId = await requireAuth();

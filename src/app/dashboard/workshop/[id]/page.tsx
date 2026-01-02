@@ -16,11 +16,13 @@ import { WorkshopStatusBadge } from "@/components/workshop-status-badge";
 import { ParticipantList } from "@/components/participant-list";
 import { CountryDistribution } from "@/components/country-distribution";
 import { GenerateGroupsButton } from "@/components/generate-groups-button";
+import { VisualizationWrapper } from "@/components/cultural-visualizations/visualization-wrapper";
 import { requireAuth } from "@/lib/auth";
 import { getWorkshopById } from "@/lib/db/queries/workshop-queries";
 import { db } from "@/lib/db";
 import { groups } from "@/lib/db/schema";
 import { eq, count } from "drizzle-orm";
+import type { Framework } from "@/lib/utils/cultural-distance";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -141,6 +143,7 @@ export default async function WorkshopPage({ params }: PageProps) {
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="participants">Participants</TabsTrigger>
+          <TabsTrigger value="visualizations">Cultural Distances</TabsTrigger>
         </TabsList>
         <TabsContent value="overview" className="space-y-6">
           <Card>
@@ -184,34 +187,29 @@ export default async function WorkshopPage({ params }: PageProps) {
                       </Button>
                     </div>
                   )}
-                  {workshop.framework &&
-                    workshop.groupSize !== null &&
-                    workshop.status !== "closed" && (
-                      <div className="space-y-4">
-                        <div>
-                          <div className="text-sm font-medium mb-2">
-                            Ready to Generate Groups
-                          </div>
-                          <p className="text-sm text-muted-foreground mb-4">
-                            Your grouping configuration is complete. Click the
-                            button below to generate diverse groups based on
-                            cultural distances.
-                          </p>
-                          <GenerateGroupsButton
-                            workshopId={workshop.id}
-                            disabled={workshop.status === "closed"}
-                          />
+                  {workshop.framework && workshop.groupSize !== null && (
+                    <div className="space-y-4">
+                      <div>
+                        <div className="text-sm font-medium mb-2">
+                          Ready to Generate Groups
                         </div>
-                        <div>
-                          <Button asChild variant="outline" size="sm">
-                            <Link href={`/dashboard/workshop/${id}/configure`}>
-                              <Settings className="mr-2 h-4 w-4" />
-                              Change Configuration
-                            </Link>
-                          </Button>
-                        </div>
+                        <p className="text-sm text-muted-foreground mb-4">
+                          Your grouping configuration is complete. Click the
+                          button below to generate diverse groups based on
+                          cultural distances.
+                        </p>
+                        <GenerateGroupsButton workshopId={workshop.id} />
                       </div>
-                    )}
+                      <div>
+                        <Button asChild variant="outline" size="sm">
+                          <Link href={`/dashboard/workshop/${id}/configure`}>
+                            <Settings className="mr-2 h-4 w-4" />
+                            Change Configuration
+                          </Link>
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </CardContent>
@@ -236,6 +234,12 @@ export default async function WorkshopPage({ params }: PageProps) {
               <CountryDistribution workshopId={workshop.id} />
             </div>
           </div>
+        </TabsContent>
+        <TabsContent value="visualizations" className="space-y-6">
+          <VisualizationWrapper
+            workshopId={workshop.id}
+            framework={(workshop.framework as Framework) || "combined"}
+          />
         </TabsContent>
       </Tabs>
     </div>
