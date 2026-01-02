@@ -11,6 +11,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { WorkshopJoinCode } from "@/components/workshop-join-code";
+import { WorkshopQRCode } from "@/components/workshop-qr-code";
 import { WorkshopStateControls } from "@/components/workshop-state-controls";
 import { WorkshopStatusBadge } from "@/components/workshop-status-badge";
 import { ParticipantList } from "@/components/participant-list";
@@ -90,8 +91,11 @@ export default async function WorkshopPage({ params }: PageProps) {
               Share this code with participants so they can join your workshop
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-6">
             <WorkshopJoinCode joinCode={workshop.joinCode} />
+            <div className="border-t pt-6">
+              <WorkshopQRCode joinCode={workshop.joinCode} />
+            </div>
           </CardContent>
         </Card>
 
