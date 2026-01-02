@@ -6,7 +6,7 @@ Workshop Lifecycle State Management
 
 ## Goal
 
-Enable facilitators to control workshop progression through defined phases (draft → collecting → grouped → closed) with proper state transitions, validation, and UI feedback.
+Enable facilitators to control workshop progression through defined phases (collecting → grouped → closed) with proper state transitions, validation, and UI feedback.
 
 ## User Story
 
@@ -14,19 +14,16 @@ As a facilitator, I want to advance my workshop through different phases, so tha
 
 ## Functional Requirements
 
-- Support four workshop states:
-  - **draft**: Initial state, workshop created but not accepting participants
-  - **collecting**: Workshop accepting participant registrations
+- Support three active workshop states:
+  - **collecting**: Initial state, workshop accepting participant registrations (created immediately active)
   - **grouped**: Participants have been assigned to groups
   - **closed**: Workshop is complete, no further actions
 - Facilitator can advance state forward only (no regression)
 - State transitions must be validated:
-  - draft → collecting: Always allowed
   - collecting → grouped: Only if groups are generated
   - grouped → closed: Always allowed
 - Participants' permissions depend on workshop state:
-  - draft: Participants cannot join
-  - collecting: Participants can join
+  - collecting: Participants can join (workshop is immediately active upon creation)
   - grouped: Participants can view groups and submit reflections
   - closed: Read-only access for all
 - UI displays current state with visual indicator (badge)
@@ -37,30 +34,28 @@ As a facilitator, I want to advance my workshop through different phases, so tha
 
 **Workshops Table**
 
-- `status` (enum: 'draft' | 'collecting' | 'grouped' | 'closed', default: 'draft', not null)
+- `status` (enum: 'draft' | 'collecting' | 'grouped' | 'closed', default: 'collecting', not null)
 - `updated_at` (timestamp, auto-updated on status change)
 
 **State Transition Rules**
 
-- draft → collecting: No prerequisites
 - collecting → grouped: Requires groups to be generated (groups table has records)
 - grouped → closed: No prerequisites
 - All other transitions: Blocked
 
 ## User Flow
 
-1. Facilitator views workshop detail page
-2. Current state displayed as badge (draft/collecting/grouped/closed)
-3. Available state transition buttons displayed based on current state
-4. Facilitator clicks "Start Collecting" button (if in draft)
-5. System validates transition is allowed
-6. System updates workshop status to "collecting"
-7. UI updates to reflect new state
-8. Participants can now join workshop
-9. Facilitator later clicks "Mark as Grouped" (after generating groups)
-10. System validates groups exist, updates status to "grouped"
-11. Facilitator later clicks "Close Workshop"
-12. System updates status to "closed", workshop is read-only
+1. Facilitator creates workshop (automatically starts in "collecting" state)
+2. Participants can immediately join using the join code
+3. Facilitator views workshop detail page
+4. Current state displayed as badge (collecting/grouped/closed)
+5. Available state transition buttons displayed based on current state
+6. Facilitator clicks "Mark as Grouped" (after generating groups)
+7. System validates groups exist, updates status to "grouped"
+8. UI updates to reflect new state
+9. Participants can now view groups and submit reflections
+10. Facilitator later clicks "Close Workshop"
+11. System updates status to "closed", workshop is read-only
 
 ## Acceptance Criteria
 
@@ -120,7 +115,7 @@ export const workshopStatusEnum = pgEnum("workshop_status", [
 
 export const workshops = pgTable("workshops", {
   // ... other fields
-  status: workshopStatusEnum("status").default("draft").notNull(),
+  status: workshopStatusEnum("status").default("collecting").notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 ```
@@ -260,11 +255,6 @@ export function WorkshopStateControls({
 
   return (
     <div className="flex gap-2">
-      {currentStatus === "draft" && (
-        <Button onClick={() => handleStatusUpdate("collecting")}>
-          Start Collecting
-        </Button>
-      )}
       {currentStatus === "collecting" && (
         <Button onClick={() => handleStatusUpdate("grouped")}>
           Mark as Grouped
@@ -284,10 +274,11 @@ export function WorkshopStateControls({
 
 | State      | Participants Can Join | Participants Can View Groups | Participants Can Submit Reflections | Facilitator Can Edit |
 | ---------- | --------------------- | ---------------------------- | ----------------------------------- | -------------------- |
-| draft      | ❌                    | ❌                           | ❌                                  | ✅                   |
 | collecting | ✅                    | ❌                           | ❌                                  | ✅                   |
 | grouped    | ❌                    | ✅                           | ✅                                  | ✅                   |
 | closed     | ❌                    | ✅                           | ❌                                  | ❌                   |
+
+**Note**: Workshops are created directly in "collecting" state, making them immediately active and ready for participants to join.
 
 ## UI/UX Considerations
 

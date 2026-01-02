@@ -1,0 +1,1 @@
+ALTER TABLE "workshops" ALTER COLUMN "status" SET DEFAULT 'collecting';

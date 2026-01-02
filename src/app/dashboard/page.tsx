@@ -9,9 +9,15 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { WorkshopList } from "@/components/workshop-list";
+import { requireAuth } from "@/lib/auth";
+import { getWorkshopsByFacilitator } from "@/lib/db/queries/workshop-queries";
 
 export default async function DashboardPage() {
   const user = await currentUser();
+  const userId = await requireAuth();
+
+  const workshops = await getWorkshopsByFacilitator(userId);
 
   return (
     <div className="space-y-6">
@@ -42,9 +48,7 @@ export default async function DashboardPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground">
-            No workshops yet. Create your first workshop to get started.
-          </p>
+          <WorkshopList workshops={workshops} />
         </CardContent>
       </Card>
     </div>

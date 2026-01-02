@@ -1,9 +1,15 @@
 "use server";
 
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { requireAuth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { groups, workshops } from "@/lib/db/schema";
+import {
+  groupMembers,
+  groups,
+  participants,
+  reflections,
+  workshops,
+} from "@/lib/db/schema";
 import type { WorkshopStatus } from "@/lib/db/schema/workshops";
 import { generateJoinCode } from "@/lib/utils/join-code";
 
@@ -79,7 +85,7 @@ export async function createWorkshop(
         date: parsedDate ? parsedDate.toISOString().split("T")[0] : null,
         joinCode,
         facilitatorId: userId,
-        status: "draft",
+        status: "collecting",
       })
       .returning({
         id: workshops.id,
@@ -171,4 +177,82 @@ function isValidTransition(
   };
 
   return validTransitions[current]?.includes(next) ?? false;
+}
+
+type DeleteWorkshopResult = { success: true } | { error: string };
+
+/**
+ * Deletes a workshop and all associated data with cascade.
+ * Deletes reflections, group members, groups, and participants in proper order.
+ *
+ * @param workshopId - ID of the workshop to delete
+ * @returns Success or error message
+ */
+export async function deleteWorkshop(
+  workshopId: string
+): Promise<DeleteWorkshopResult> {
+  const userId = await requireAuth();
+
+  // Verify facilitator owns workshop
+  const workshop = await db
+    .select()
+    .from(workshops)
+    .where(
+      and(eq(workshops.id, workshopId), eq(workshops.facilitatorId, userId))
+    )
+    .limit(1);
+
+  if (workshop.length === 0) {
+    return { error: "Workshop not found" };
+  }
+
+  // Delete all related data in correct order
+  // Note: Neon HTTP driver doesn't support transactions, so we delete sequentially
+  try {
+    // Get all participants for this workshop
+    const workshopParticipants = await db
+      .select({ id: participants.id })
+      .from(participants)
+      .where(eq(participants.workshopId, workshopId));
+
+    const participantIds = workshopParticipants.map((p) => p.id);
+
+    // Get all groups for this workshop
+    const workshopGroups = await db
+      .select({ id: groups.id })
+      .from(groups)
+      .where(eq(groups.workshopId, workshopId));
+
+    const groupIds = workshopGroups.map((g) => g.id);
+
+    // 1. Delete reflections (if any participants exist)
+    if (participantIds.length > 0) {
+      await db
+        .delete(reflections)
+        .where(inArray(reflections.participantId, participantIds));
+    }
+
+    // 2. Delete group members (if any groups exist)
+    if (groupIds.length > 0) {
+      await db
+        .delete(groupMembers)
+        .where(inArray(groupMembers.groupId, groupIds));
+    }
+
+    // 3. Delete groups
+    await db.delete(groups).where(eq(groups.workshopId, workshopId));
+
+    // 4. Delete participants
+    await db
+      .delete(participants)
+      .where(eq(participants.workshopId, workshopId));
+
+    // 5. Finally, delete the workshop
+    await db.delete(workshops).where(eq(workshops.id, workshopId));
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error deleting workshop:", error);
+    return { error: "Failed to delete workshop. Please try again." };
+  }
 }

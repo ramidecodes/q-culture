@@ -31,7 +31,7 @@ The `docs/` directory contains project documentation and feature specifications:
 - **`base-project.md`** - Main project documentation with PRD and FREDs (Feature Requirement Documents)
 - **`features/`** - Individual feature requirement documents:
   - **`implemented/`** - Documentation for completed features
-  - Feature-specific FREDs (workshop creation, participant management, grouping, etc.)
+  - Feature-specific FREDs (workshop creation, participant management, grouping, workshop management, etc.)
 - **`Quantifying-Culture-data.csv`** - Reference data for cultural frameworks
 
 ## Source Code (`src/`)
@@ -84,6 +84,7 @@ Reusable React components organized by purpose:
 - **`theme-provider.tsx`** - Theme context provider (dark/light mode)
 - **`theme-toggle.tsx`** - Theme switcher component
 - **`workshop-join-code.tsx`** - Component displaying workshop join code
+- **`workshop-list.tsx`** - Component displaying facilitator's workshops with delete functionality
 - **`workshop-state-controls.tsx`** - Controls for managing workshop state
 - **`workshop-status-badge.tsx`** - Badge component for workshop status display
 
@@ -96,14 +97,15 @@ Core application logic and utilities:
 - **`actions/`** - Server actions for data mutations:
   - **`grouping-actions.ts`** - Actions for group generation and management
   - **`participant-actions.ts`** - Actions for participant operations
-  - **`workshop-actions.ts`** - Actions for workshop CRUD operations
+  - **`workshop-actions.ts`** - Actions for workshop CRUD operations (create, update status, delete with cascade)
 - **`db/`** - Database layer:
   - **`index.ts`** - Database connection and client setup (Drizzle + Supabase)
   - **`queries/`** - Database query functions:
     - `country-queries.ts` - Country data queries
     - `participant-queries.ts` - Participant data queries
     - `reflection-queries.ts` - Reflection data queries (organized by group)
-    - `workshop-queries.ts` - Workshop data queries
+    - `workshop-queries.ts` - Workshop data queries (list, get by ID, participant counts)
+    - `visualization-queries.ts` - Cultural visualization data queries
   - **`schema/`** - Drizzle ORM schema definitions:
     - `countries.ts` - Country reference data
     - `cultural-frameworks.ts` - Cultural framework scores

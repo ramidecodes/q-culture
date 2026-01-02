@@ -31,7 +31,7 @@ export const workshops = pgTable("workshops", {
   date: date("date"),
   joinCode: text("join_code").notNull().unique(),
   facilitatorId: text("facilitator_id").notNull(),
-  status: workshopStatusEnum("status").default("draft").notNull(),
+  status: workshopStatusEnum("status").default("collecting").notNull(),
   framework: frameworkEnum("framework"),
   groupSize: integer("group_size"),
   createdAt: timestamp("created_at").defaultNow().notNull(),

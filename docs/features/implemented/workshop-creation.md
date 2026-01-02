@@ -18,7 +18,7 @@ As a facilitator, I want to create a new workshop with a title and optional date
   - Title (required, max 200 characters)
   - Optional date (future date allowed)
 - System automatically generates unique 6-character alphanumeric join code
-- Workshop is created in "draft" status
+- Workshop is created in "collecting" status (active and ready for participants)
 - Workshop is associated with authenticated facilitator's Clerk user ID
 - Success confirmation with join link/code displayed
 - Error handling for validation failures
@@ -33,7 +33,7 @@ As a facilitator, I want to create a new workshop with a title and optional date
 - `date` (date, nullable)
 - `join_code` (text, required, unique, 6 alphanumeric chars)
 - `facilitator_id` (text, required - Clerk user ID)
-- `status` (enum, default: 'draft')
+- `status` (enum, default: 'collecting')
 - `created_at` (timestamp, default: now)
 - `updated_at` (timestamp, default: now)
 
@@ -57,7 +57,7 @@ As a facilitator, I want to create a new workshop with a title and optional date
 - Date field accepts valid date format (optional)
 - Unique join code is generated for each workshop
 - Workshop record created with correct facilitator_id
-- Workshop status defaults to "draft"
+- Workshop status defaults to "collecting" (active state)
 - Join code/link is displayed after creation
 - Success toast notification appears
 - Redirect to workshop detail page works correctly
@@ -157,7 +157,7 @@ export async function createWorkshop(data: {
       date: data.date || null,
       joinCode,
       facilitatorId: userId,
-      status: "draft",
+      status: "collecting",
     })
     .returning();
   
@@ -253,7 +253,7 @@ export default function NewWorkshopPage() {
 
 - Unique constraint on `join_code` column
 - Foreign key relationship to facilitator (via Clerk user ID)
-- Default value for `status` = 'draft'
+- Default value for `status` = 'collecting'
 - Timestamps auto-managed
 
 ## Future Enhancements

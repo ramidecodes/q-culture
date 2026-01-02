@@ -6,7 +6,8 @@ import { db } from "@/lib/db";
 import { groups, groupMembers, participants, workshops } from "@/lib/db/schema";
 import { generateGroups } from "@/lib/utils/group-assignment";
 import { getCulturalDataForCountries } from "@/lib/db/queries/country-queries";
-import { validateFrameworkScores, type Framework } from "@/types/cultural";
+import { validateFrameworkScores } from "@/types/cultural";
+import type { Framework } from "@/types/cultural";
 
 export type { Framework };
 export type GroupSize = 3 | 4 | null;

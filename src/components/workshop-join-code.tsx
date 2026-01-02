@@ -39,11 +39,15 @@ export function WorkshopJoinCode({ joinCode }: { joinCode: string }) {
   return (
     <div className="space-y-4">
       <div>
-        <label className="text-sm font-medium text-muted-foreground mb-2 block">
+        <label
+          htmlFor="join-code"
+          className="text-sm font-medium text-muted-foreground mb-2 block"
+        >
           Join Code
         </label>
         <div className="flex gap-2">
           <Input
+            id="join-code"
             value={joinCode}
             readOnly
             className="font-mono text-lg font-semibold tracking-wider text-center"
@@ -64,11 +68,15 @@ export function WorkshopJoinCode({ joinCode }: { joinCode: string }) {
         </div>
       </div>
       <div>
-        <label className="text-sm font-medium text-muted-foreground mb-2 block">
+        <label
+          htmlFor="join-url"
+          className="text-sm font-medium text-muted-foreground mb-2 block"
+        >
           Join URL
         </label>
         <div className="flex gap-2">
           <Input
+            id="join-url"
             value={joinUrl}
             readOnly
             className="font-mono text-sm text-center"

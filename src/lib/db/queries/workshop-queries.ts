@@ -1,4 +1,4 @@
-import { and, eq, sql } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { workshops, participants, countries } from "@/lib/db/schema";
 
@@ -113,4 +113,39 @@ export async function getCountryDistribution(
     .where(eq(participants.workshopId, workshopId))
     .groupBy(participants.countryCode, countries.name)
     .orderBy(sql`count(*) desc`);
+}
+
+/**
+ * Fetches all workshops for a facilitator with participant counts.
+ * Returns workshops ordered by creation date (newest first).
+ */
+export async function getWorkshopsByFacilitator(facilitatorId: string) {
+  const workshopList = await db
+    .select({
+      id: workshops.id,
+      title: workshops.title,
+      date: workshops.date,
+      joinCode: workshops.joinCode,
+      status: workshops.status,
+      framework: workshops.framework,
+      groupSize: workshops.groupSize,
+      createdAt: workshops.createdAt,
+      participantCount: sql<number>`count(${participants.id})`,
+    })
+    .from(workshops)
+    .leftJoin(participants, eq(participants.workshopId, workshops.id))
+    .where(eq(workshops.facilitatorId, facilitatorId))
+    .groupBy(
+      workshops.id,
+      workshops.title,
+      workshops.date,
+      workshops.joinCode,
+      workshops.status,
+      workshops.framework,
+      workshops.groupSize,
+      workshops.createdAt
+    )
+    .orderBy(desc(workshops.createdAt));
+
+  return workshopList;
 }
