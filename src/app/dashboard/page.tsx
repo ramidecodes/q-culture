@@ -1,16 +1,27 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { Plus } from "lucide-react";
 
 export default async function DashboardPage() {
   const user = await currentUser();
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-muted-foreground">
-          Welcome back, {user?.firstName || user?.emailAddresses[0]?.emailAddress || "Facilitator"}!
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+          <p className="text-muted-foreground">
+            Welcome back, {user?.firstName || user?.emailAddresses[0]?.emailAddress || "Facilitator"}!
+          </p>
+        </div>
+        <Button asChild>
+          <Link href="/dashboard/new-workshop">
+            <Plus className="mr-2 h-4 w-4" />
+            Create Workshop
+          </Link>
+        </Button>
       </div>
 
       <Card>
