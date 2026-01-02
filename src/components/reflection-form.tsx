@@ -84,7 +84,7 @@ export function ReflectionForm({ token }: ReflectionFormProps) {
 
     const result = await submitReflection(token, data.content);
 
-    if (result?.error) {
+    if ("error" in result) {
       setSubmitError(result.error);
       return;
     }
@@ -161,9 +161,7 @@ export function ReflectionForm({ token }: ReflectionFormProps) {
                   </FormDescription>
                   <div className="flex justify-between items-center text-sm text-muted-foreground">
                     <div>
-                      {form.formState.errors.content && (
-                        <FormMessage />
-                      )}
+                      {form.formState.errors.content && <FormMessage />}
                       {submitError && (
                         <p className="text-destructive">{submitError}</p>
                       )}
@@ -174,8 +172,8 @@ export function ReflectionForm({ token }: ReflectionFormProps) {
                           remaining < 50 && remaining >= 0
                             ? "text-orange-600 dark:text-orange-400"
                             : remaining < 0
-                              ? "text-destructive"
-                              : ""
+                            ? "text-destructive"
+                            : ""
                         }
                       >
                         {charCount} / {MAX_LENGTH} characters
@@ -190,8 +188,13 @@ export function ReflectionForm({ token }: ReflectionFormProps) {
                 </FormItem>
               )}
             />
-            <Button type="submit" disabled={submitted || form.formState.isSubmitting}>
-              {form.formState.isSubmitting ? "Submitting..." : "Submit Reflection"}
+            <Button
+              type="submit"
+              disabled={submitted || form.formState.isSubmitting}
+            >
+              {form.formState.isSubmitting
+                ? "Submitting..."
+                : "Submit Reflection"}
             </Button>
           </form>
         </Form>
