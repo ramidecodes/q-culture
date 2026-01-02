@@ -2,10 +2,11 @@
 
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { workshops } from "@/lib/db/schema";
+import { workshops, groups } from "@/lib/db/schema";
+import type { WorkshopStatus } from "@/lib/db/schema/workshops";
 import { requireAuth } from "@/lib/auth";
 import { generateJoinCode } from "@/lib/utils/join-code";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 
 type CreateWorkshopData = {
   title: string;
@@ -91,4 +92,84 @@ export async function createWorkshop(
     console.error("Error creating workshop:", error);
     return { error: "Failed to create workshop. Please try again." };
   }
+}
+
+type UpdateWorkshopStatusResult = { success: true } | { error: string };
+
+/**
+ * Updates workshop status with state transition validation.
+ * Validates that the transition is allowed and checks prerequisites.
+ *
+ * @param workshopId - ID of the workshop to update
+ * @param newStatus - Target status for the workshop
+ * @returns Success or error message
+ */
+export async function updateWorkshopStatus(
+  workshopId: string,
+  newStatus: WorkshopStatus
+): Promise<UpdateWorkshopStatusResult> {
+  const userId = await requireAuth();
+
+  // Verify facilitator owns workshop and get current status
+  const workshop = await db
+    .select()
+    .from(workshops)
+    .where(
+      and(eq(workshops.id, workshopId), eq(workshops.facilitatorId, userId))
+    )
+    .limit(1);
+
+  if (workshop.length === 0) {
+    return { error: "Workshop not found" };
+  }
+
+  const currentStatus = workshop[0].status;
+
+  // Validate state transition
+  if (!isValidTransition(currentStatus, newStatus)) {
+    return { error: "Invalid state transition" };
+  }
+
+  // Special validation for grouped state: must have groups
+  if (newStatus === "grouped") {
+    const workshopGroups = await db
+      .select()
+      .from(groups)
+      .where(eq(groups.workshopId, workshopId))
+      .limit(1);
+
+    if (workshopGroups.length === 0) {
+      return { error: "Cannot advance to grouped: no groups generated" };
+    }
+  }
+
+  // Update status in transaction
+  try {
+    await db
+      .update(workshops)
+      .set({
+        status: newStatus,
+        updatedAt: new Date(),
+      })
+      .where(eq(workshops.id, workshopId));
+
+    return { success: true };
+  } catch (error) {
+    console.error("Error updating workshop status:", error);
+    return { error: "Failed to update workshop status. Please try again." };
+  }
+}
+
+function isValidTransition(
+  current: WorkshopStatus,
+  next: WorkshopStatus
+): boolean {
+  const validTransitions: Record<WorkshopStatus, WorkshopStatus[]> = {
+    draft: ["collecting"],
+    collecting: ["grouped"],
+    grouped: ["closed"],
+    closed: [], // Terminal state
+  };
+
+  return validTransitions[current]?.includes(next) ?? false;
 }

@@ -8,6 +8,8 @@ export const workshopStatusEnum = pgEnum("workshop_status", [
   "closed",
 ]);
 
+export type WorkshopStatus = "draft" | "collecting" | "grouped" | "closed";
+
 export const frameworkEnum = pgEnum("framework", [
   "lewis",
   "hall",

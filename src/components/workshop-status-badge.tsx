@@ -1,6 +1,5 @@
 import { Badge } from "@/components/ui/badge";
-
-type WorkshopStatus = "draft" | "collecting" | "grouped" | "closed";
+import type { WorkshopStatus } from "@/lib/db/schema/workshops";
 
 const statusConfig: Record<
   WorkshopStatus,

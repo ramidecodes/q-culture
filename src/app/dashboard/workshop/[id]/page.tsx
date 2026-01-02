@@ -3,6 +3,7 @@ import { requireAuth } from "@/lib/auth";
 import { getWorkshopById } from "@/lib/db/queries/workshop-queries";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { WorkshopStatusBadge } from "@/components/workshop-status-badge";
+import { WorkshopStateControls } from "@/components/workshop-state-controls";
 import { Calendar } from "lucide-react";
 import { WorkshopJoinCode } from "@/components/workshop-join-code";
 
@@ -103,7 +104,7 @@ export default async function WorkshopPage({ params }: PageProps) {
             Manage your workshop and track participant progress
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground">
             {workshop.status === "draft" && (
               "Your workshop is in draft mode. Start collecting participants when you're ready."
@@ -118,6 +119,17 @@ export default async function WorkshopPage({ params }: PageProps) {
               "This workshop is closed. No further actions can be taken."
             )}
           </p>
+          {workshop.status !== "closed" && (
+            <div>
+              <div className="text-sm font-medium text-muted-foreground mb-2">
+                Workshop State
+              </div>
+              <WorkshopStateControls
+                workshopId={workshop.id}
+                currentStatus={workshop.status}
+              />
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
