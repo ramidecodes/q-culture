@@ -17,8 +17,10 @@ import { ParticipantList } from "@/components/participant-list";
 import { CountryDistribution } from "@/components/country-distribution";
 import { GenerateGroupsButton } from "@/components/generate-groups-button";
 import { VisualizationWrapper } from "@/components/cultural-visualizations/visualization-wrapper";
+import { ReflectionList } from "@/components/reflection-list";
 import { requireAuth } from "@/lib/auth";
 import { getWorkshopById } from "@/lib/db/queries/workshop-queries";
+import { getWorkshopReflectionsWithMissing } from "@/lib/db/queries/reflection-queries";
 import { db } from "@/lib/db";
 import { groups } from "@/lib/db/schema";
 import { eq, count } from "drizzle-orm";
@@ -45,6 +47,12 @@ export default async function WorkshopPage({ params }: PageProps) {
     .where(eq(groups.workshopId, id));
 
   const hasGroups = (groupsResult[0]?.count ?? 0) > 0;
+
+  // Get reflections if groups are generated
+  const groupedReflections =
+    hasGroups && (workshop.status === "grouped" || workshop.status === "closed")
+      ? await getWorkshopReflectionsWithMissing(id, userId)
+      : [];
 
   return (
     <div className="container max-w-4xl py-8 space-y-6">
@@ -144,6 +152,9 @@ export default async function WorkshopPage({ params }: PageProps) {
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="participants">Participants</TabsTrigger>
           <TabsTrigger value="visualizations">Cultural Distances</TabsTrigger>
+          {hasGroups && (workshop.status === "grouped" || workshop.status === "closed") && (
+            <TabsTrigger value="reflections">Reflections</TabsTrigger>
+          )}
         </TabsList>
         <TabsContent value="overview" className="space-y-6">
           <Card>
@@ -241,6 +252,27 @@ export default async function WorkshopPage({ params }: PageProps) {
             framework={(workshop.framework as Framework) || "combined"}
           />
         </TabsContent>
+        {hasGroups && (workshop.status === "grouped" || workshop.status === "closed") && (
+          <TabsContent value="reflections" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Participant Reflections</CardTitle>
+                <CardDescription>
+                  Review all participant reflections organized by group.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {groupedReflections.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <p>No reflections found for this workshop.</p>
+                  </div>
+                ) : (
+                  <ReflectionList reflections={groupedReflections} />
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );

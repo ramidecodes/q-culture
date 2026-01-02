@@ -53,6 +53,7 @@ Next.js App Router structure defining the application's routes and pages:
   - **`workshop/[id]/`** - Individual workshop management
     - **`page.tsx`** - Workshop overview page
     - **`configure/page.tsx`** - Workshop configuration page
+    - **`reflections/page.tsx`** - Participant reflections review page
     - **`not-found.tsx`** - Workshop not found page
 - **`join/[code]/page.tsx`** - Participant join page (public route)
 - **`participant/[token]/page.tsx`** - Participant view page (public route)
@@ -79,6 +80,7 @@ Reusable React components organized by purpose:
 - **`participant-card.tsx`** - Individual participant card component
 - **`participant-join-form.tsx`** - Form for participants to join a workshop
 - **`participant-list.tsx`** - List view of workshop participants
+- **`reflection-list.tsx`** - Component displaying participant reflections organized by group
 - **`theme-provider.tsx`** - Theme context provider (dark/light mode)
 - **`theme-toggle.tsx`** - Theme switcher component
 - **`workshop-join-code.tsx`** - Component displaying workshop join code
@@ -99,6 +101,8 @@ Core application logic and utilities:
   - **`index.ts`** - Database connection and client setup (Drizzle + Supabase)
   - **`queries/`** - Database query functions:
     - `country-queries.ts` - Country data queries
+    - `participant-queries.ts` - Participant data queries
+    - `reflection-queries.ts` - Reflection data queries (organized by group)
     - `workshop-queries.ts` - Workshop data queries
   - **`schema/`** - Drizzle ORM schema definitions:
     - `countries.ts` - Country reference data
