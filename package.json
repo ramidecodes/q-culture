@@ -6,7 +6,6 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint --fix",
     "format": "biome format --write .",
     "check": "biome check --write .",
     "db:generate": "drizzle-kit generate",

@@ -208,7 +208,7 @@ export async function generateWorkshopGroups(
   }
 
   // Generate groups
-  let generatedGroups: Array<{ participants: string[] }>;
+  let generatedGroups: Array<{ participants: string[] }> | undefined;
   try {
     generatedGroups = generateGroups(
       participantsWithScores,
@@ -222,6 +222,12 @@ export async function generateWorkshopGroups(
         error instanceof Error
           ? error.message
           : "Failed to generate groups. Please try again.",
+    };
+  }
+
+  if (!generatedGroups) {
+    return {
+      error: "Unable to generate groups. Need at least 3 participants.",
     };
   }
 
