@@ -51,9 +51,13 @@ async function VisualizationData({
         </div>
       );
     }
+
+    return null;
   }
 
-  return <VisualizationView initialData={result.data} workshopId={workshopId} />;
+  return (
+    <VisualizationView initialData={result.data} workshopId={workshopId} />
+  );
 }
 
 export function VisualizationWrapper({
