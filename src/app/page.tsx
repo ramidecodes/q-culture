@@ -9,6 +9,8 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { GetStartedButton } from "@/components/get-started-button";
+import Link from "next/link";
 
 export default function Home() {
   return (
@@ -29,9 +31,9 @@ export default function Home() {
             people) for discussion and reflection.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-2 pt-4">
-            <Button size="lg">Get Started</Button>
+            <GetStartedButton />
             <Button variant="outline" size="lg">
-              Learn More
+              <Link href="#features">Learn More</Link>
             </Button>
           </div>
         </div>
@@ -40,7 +42,7 @@ export default function Home() {
       <Separator />
 
       {/* Features Section */}
-      <section className="container mx-auto px-4 py-16">
+      <section id="features" className="container mx-auto px-4 py-16">
         <div className="mb-12 text-center">
           <h2 className="mb-4 text-3xl font-bold tracking-tight">
             Key Features
