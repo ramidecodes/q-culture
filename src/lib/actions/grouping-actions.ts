@@ -9,6 +9,7 @@ import { getCulturalDataForCountries } from "@/lib/db/queries/country-queries";
 import { validateFrameworkScores } from "@/types/cultural";
 import type { Framework } from "@/types/cultural";
 
+export type { Framework };
 export type GroupSize = 3 | 4 | null;
 
 type GroupingConfig = {

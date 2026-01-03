@@ -191,9 +191,9 @@ export function HeroNetworkGraph({ className }: HeroNetworkGraphProps) {
         linkColor={getEdgeColor}
         linkWidth={getEdgeWidth}
         linkDirectionalArrowLength={0}
-        linkOpacity={0.3}
         d3AlphaDecay={0.02}
         d3VelocityDecay={0.3}
+        // @ts-expect-error - d3Force is valid but types may be outdated
         d3Force={(
           forceName: string,
           force: {
