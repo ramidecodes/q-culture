@@ -398,19 +398,10 @@ export function NetworkGraph({
   /**
    * Edge width based on distance (inverse) - thicker for SMALLER distances (stronger similarity)
    *
-   * Encoding logic:
-   * - Thicker edges = more similar (smaller distance)
-   * - Thinner edges = less similar (larger distance)
+   * Values are in pixels for library's default rendering.
    *
-   * Aggregate mode:
-   *   - Distance is normalized by maxDistance (0-1 range)
-   *   - Thickness: 1 + (1 - normalized) * 4 = range 1-5px
-   *   - Small distance → high (1-normalized) → thick edge ✓
-   *
-   * Dimensional mode:
-   *   - Distance is already normalized 0-1 from computeDimensionalDistances
-   *   - Thickness: 0.5 + (1 - distance) * 2.5 = range 0.5-3px
-   *   - Small distance → high (1-distance) → thick edge ✓
+   * Dimensional mode: Very thin (0.5-1.5px) since many edges overlap
+   * Aggregate mode: Slightly thicker (0.8-2.5px) since only one edge per pair
    */
   const getEdgeWidth = useCallback(
     (link: LibraryLink): number => {
@@ -420,21 +411,17 @@ export function NetworkGraph({
 
       let baseWidth: number;
       if (edgeMode === "dimensional") {
-        // In dimensional mode, use normalized distance (already 0-1)
-        const normalized = linkDistance;
-        const inverseNormalized = 1 - normalized;
-        // Thinner edges in dimensional mode to avoid overlap
-        baseWidth = Math.max(0.5, Math.min(3, 0.5 + inverseNormalized * 2.5));
+        const inverseNormalized = 1 - linkDistance;
+        // Very thin: 0.5 to 1.5 pixels
+        baseWidth = 0.5 + inverseNormalized * 1;
       } else {
-        // Aggregate mode
-        // Invert: close distance = thick, far distance = thin
         const normalized = linkDistance / maxDistance;
         const inverseNormalized = 1 - normalized;
-        // Strong connections (close) = thicker edges
-        baseWidth = Math.max(0.5, Math.min(5, 1 + inverseNormalized * 4));
+        // Thin: 0.8 to 2.5 pixels
+        baseWidth = 0.8 + inverseNormalized * 1.7;
       }
 
-      return isHovered ? baseWidth * 1.8 : baseWidth;
+      return isHovered ? baseWidth * 2 : baseWidth;
     },
     [maxDistance, edgeMode, hoveredLink]
   );
@@ -943,6 +930,7 @@ export function NetworkGraph({
     return () => container.removeEventListener("mousemove", handleMouseMove);
   }, []);
 
+
   // Custom node rendering with labels
   const renderNode = useCallback(
     (node: LibraryNode, ctx: CanvasRenderingContext2D, globalScale: number) => {
@@ -985,6 +973,86 @@ export function NetworkGraph({
       }
     },
     [getNodeColor, hoveredNode, selectedElement]
+  );
+
+  // Define hit detection area for nodes (invisible, used for hover/click detection)
+  const paintNodePointerArea = useCallback(
+    (
+      node: LibraryNode,
+      color: string,
+      ctx: CanvasRenderingContext2D,
+      _globalScale: number
+    ) => {
+      const nodeSize = 6;
+      // Constant hit area in graph coordinates (not screen coordinates)
+      const hitRadius = nodeSize + 4;
+      ctx.beginPath();
+      ctx.arc(node.x ?? 0, node.y ?? 0, hitRadius, 0, 2 * Math.PI);
+      ctx.fillStyle = color;
+      ctx.fill();
+    },
+    []
+  );
+
+  // Define hit detection area for links (invisible, used for hover/click detection)
+  // Matches the library's quadratic bezier curve rendering
+  const paintLinkPointerArea = useCallback(
+    (
+      link: LibraryLink,
+      color: string,
+      ctx: CanvasRenderingContext2D,
+      _globalScale: number
+    ) => {
+      const source = link.source as LibraryNode;
+      const target = link.target as LibraryNode;
+      if (!source?.x || !source?.y || !target?.x || !target?.y) return;
+
+      const sourceX = source.x;
+      const sourceY = source.y;
+      const targetX = target.x;
+      const targetY = target.y;
+
+      if (
+        sourceX === undefined ||
+        sourceY === undefined ||
+        targetX === undefined ||
+        targetY === undefined
+      ) {
+        return;
+      }
+
+      const graphLink = link as LibraryLink &
+        Partial<GraphLink> & {
+          curvature?: number;
+        };
+      const curvature =
+        edgeMode === "dimensional" && graphLink.curvature !== undefined
+          ? graphLink.curvature
+          : 0.1;
+
+      // Draw path matching library's curve formula
+      ctx.beginPath();
+      ctx.moveTo(sourceX, sourceY);
+
+      if (Math.abs(curvature) > 0.001) {
+        const midX = (sourceX + targetX) / 2;
+        const midY = (sourceY + targetY) / 2;
+        const dx = targetX - sourceX;
+        const dy = targetY - sourceY;
+        const controlX = midX + curvature * dy;
+        const controlY = midY - curvature * dx;
+        ctx.quadraticCurveTo(controlX, controlY, targetX, targetY);
+      } else {
+        ctx.lineTo(targetX, targetY);
+      }
+
+      // Hit area slightly wider than visual for easier interaction
+      ctx.lineCap = "round";
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 4;
+      ctx.stroke();
+    },
+    [edgeMode]
   );
 
   return (
@@ -1086,9 +1154,13 @@ export function NetworkGraph({
           nodeRelSize={4}
           nodeCanvasObject={renderNode}
           nodeCanvasObjectMode={() => "replace"}
+          nodePointerAreaPaint={paintNodePointerArea}
           linkColor={getEdgeColor}
           linkWidth={getEdgeWidth}
           linkLabel={getLinkLabel}
+          linkPointerAreaPaint={paintLinkPointerArea}
+          enablePointerInteraction={true}
+          linkHoverPrecision={4}
           linkDirectionalArrowLength={0}
           linkDirectionalArrowRelPos={1}
           linkCurvature={(link: LibraryLink) => {
@@ -1097,6 +1169,7 @@ export function NetworkGraph({
                 curvature?: number;
               };
             // Use custom curvature in dimensional mode, default in aggregate
+            // This is still used for force simulation calculations
             return edgeMode === "dimensional" &&
               graphLink.curvature !== undefined
               ? graphLink.curvature
