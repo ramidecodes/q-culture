@@ -19,16 +19,44 @@ export async function GET(
     const framework: Framework = (frameworkParam as Framework) || "combined";
 
     // Get visualization data (includes auth check)
-    const data = await getVisualizationData(id, userId, framework);
+    const result = await getVisualizationData(id, userId, framework);
 
-    if (!data) {
+    if (!result.success) {
+      if (result.error === "workshop_not_found") {
+        return NextResponse.json(
+          { error: "Workshop not found" },
+          { status: 404 }
+        );
+      }
+
+      if (result.error === "insufficient_participants") {
+        return NextResponse.json(
+          {
+            error: "Insufficient participants",
+            participantCount: result.participantCount,
+          },
+          { status: 400 }
+        );
+      }
+
+      if (result.error === "framework_unavailable") {
+        return NextResponse.json(
+          {
+            error: "Framework unavailable for these participants",
+            availableFrameworks: result.availableFrameworks,
+            missingCountries: result.missingCountries,
+          },
+          { status: 400 }
+        );
+      }
+
       return NextResponse.json(
-        { error: "Workshop not found" },
-        { status: 404 }
+        { error: "Failed to compute distance matrix" },
+        { status: 500 }
       );
     }
 
-    return NextResponse.json(data);
+    return NextResponse.json(result.data);
   } catch (error) {
     console.error("Error computing distance matrix:", error);
     return NextResponse.json(

@@ -20,7 +20,7 @@ import {
 import { NetworkGraph } from "./network-graph";
 import { DistanceMatrixHeatmap } from "./distance-matrix-heatmap";
 import type { Framework } from "@/types/cultural";
-import { Loader2 } from "lucide-react";
+import { Loader2, Info } from "lucide-react";
 
 type VisualizationContainerProps = {
   workshopId: string;
@@ -29,6 +29,7 @@ type VisualizationContainerProps = {
 
 type VisualizationData = {
   framework: Framework;
+  availableFrameworks: Framework[];
   graphData: {
     nodes: Array<{
       id: string;
@@ -63,6 +64,13 @@ type VisualizationData = {
     minDistance: number;
     maxDistance: number;
   };
+};
+
+const frameworkLabels: Record<Framework, string> = {
+  lewis: "Lewis Framework",
+  hall: "Hall Framework",
+  hofstede: "Hofstede Framework",
+  combined: "Combined Framework",
 };
 
 const fetcher = async (url: string): Promise<VisualizationData> => {
@@ -149,17 +157,39 @@ export function VisualizationContainer({
                 Explore cultural distances between participants
               </CardDescription>
             </div>
-            <Select value={framework} onValueChange={handleFrameworkChange}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="lewis">Lewis Framework</SelectItem>
-                <SelectItem value="hall">Hall Framework</SelectItem>
-                <SelectItem value="hofstede">Hofstede Framework</SelectItem>
-                <SelectItem value="combined">Combined Framework</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="flex items-center gap-2">
+              {data.availableFrameworks.length < 4 && (
+                <div
+                  className="group relative"
+                  title="Some frameworks are unavailable because not all participants' countries have complete cultural data. Only frameworks with complete data for all countries are shown."
+                >
+                  <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                </div>
+              )}
+              <Select value={framework} onValueChange={handleFrameworkChange}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {(["lewis", "hall", "hofstede", "combined"] as Framework[]).map(
+                    (fw) => {
+                      const isAvailable = data.availableFrameworks.includes(fw);
+                      return (
+                        <SelectItem
+                          key={fw}
+                          value={fw}
+                          disabled={!isAvailable}
+                          className={!isAvailable ? "opacity-50" : ""}
+                        >
+                          {frameworkLabels[fw]}
+                          {!isAvailable && " (unavailable)"}
+                        </SelectItem>
+                      );
+                    }
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </CardHeader>
         <CardContent>

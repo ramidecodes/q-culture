@@ -10,9 +10,15 @@ import {
   type Group,
 } from "@/lib/utils/visualization-data";
 import type { Framework } from "@/types/cultural";
+import { getCulturalDataForCountries } from "@/lib/db/queries/country-queries";
+import {
+  getAvailableFrameworks,
+  getBestAvailableFramework,
+} from "@/lib/utils/framework-availability";
 
 export type VisualizationData = {
   framework: Framework;
+  availableFrameworks: Framework[];
   graphData: {
     nodes: Array<{
       id: string;
@@ -50,8 +56,20 @@ export type VisualizationData = {
 };
 
 export type VisualizationDataResult =
-  | { success: true; data: VisualizationData }
-  | { success: false; error: "workshop_not_found" | "insufficient_participants"; participantCount?: number };
+  | {
+      success: true;
+      data: VisualizationData;
+    }
+  | {
+      success: false;
+      error:
+        | "workshop_not_found"
+        | "insufficient_participants"
+        | "framework_unavailable";
+      participantCount?: number;
+      availableFrameworks?: Framework[];
+      missingCountries?: string[];
+    };
 
 /**
  * Fetches and computes visualization data for a workshop.
@@ -113,6 +131,25 @@ export async function getVisualizationData(
     countryName: p.countryName,
   }));
 
+  // Get cultural data for all participants to check framework availability
+  const countryCodes = participantsData.map((p) => p.countryCode);
+  const culturalDataMap = await getCulturalDataForCountries(countryCodes);
+
+  // Determine available frameworks
+  const availableFrameworks = getAvailableFrameworks(
+    culturalDataMap,
+    countryCodes
+  );
+
+  // Use requested framework if available, otherwise fallback to best available
+  let selectedFramework = framework;
+  if (!availableFrameworks.includes(framework)) {
+    selectedFramework = getBestAvailableFramework(
+      culturalDataMap,
+      countryCodes
+    );
+  }
+
   // Get groups if they exist
   let groupsData: Group[] | undefined;
   const existingGroups = await db
@@ -143,10 +180,10 @@ export async function getVisualizationData(
     }));
   }
 
-  // Compute distance matrix
+  // Compute distance matrix with selected framework
   const distanceMatrix = await computeDistanceMatrixForParticipants(
     participantsData,
-    framework
+    selectedFramework
   );
 
   // Transform to visualization formats
@@ -164,7 +201,8 @@ export async function getVisualizationData(
   return {
     success: true,
     data: {
-      framework,
+      framework: selectedFramework,
+      availableFrameworks,
       graphData,
       heatmapData,
     },

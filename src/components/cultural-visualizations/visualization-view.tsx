@@ -14,6 +14,7 @@ import { DistanceMatrixHeatmap } from "./distance-matrix-heatmap";
 import type { Framework } from "@/types/cultural";
 import type { VisualizationData } from "@/lib/db/queries/visualization-queries";
 import useSWR from "swr";
+import { Info } from "lucide-react";
 
 type VisualizationViewProps = {
   initialData: VisualizationData;
@@ -23,9 +24,17 @@ type VisualizationViewProps = {
 const fetcher = async (url: string): Promise<VisualizationData> => {
   const res = await fetch(url);
   if (!res.ok) {
-    throw new Error("Failed to fetch distance matrix");
+    const error = await res.json();
+    throw new Error(error.error || "Failed to fetch distance matrix");
   }
   return res.json();
+};
+
+const frameworkLabels: Record<Framework, string> = {
+  lewis: "Lewis Framework",
+  hall: "Hall Framework",
+  hofstede: "Hofstede Framework",
+  combined: "Combined Framework",
 };
 
 export function VisualizationView({
@@ -70,18 +79,43 @@ export function VisualizationView({
     );
   }
 
+  const availableFrameworks =
+    visualizationData.availableFrameworks || initialData.availableFrameworks;
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-end">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          {availableFrameworks.length < 4 && (
+            <div
+              className="group relative"
+              title="Some frameworks are unavailable because not all participants' countries have complete cultural data. Only frameworks with complete data for all countries are shown."
+            >
+              <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+            </div>
+          )}
+        </div>
         <Select value={framework} onValueChange={handleFrameworkChange}>
           <SelectTrigger className="w-[180px]">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="lewis">Lewis Framework</SelectItem>
-            <SelectItem value="hall">Hall Framework</SelectItem>
-            <SelectItem value="hofstede">Hofstede Framework</SelectItem>
-            <SelectItem value="combined">Combined Framework</SelectItem>
+            {(["lewis", "hall", "hofstede", "combined"] as Framework[]).map(
+              (fw) => {
+                const isAvailable = availableFrameworks.includes(fw);
+                return (
+                  <SelectItem
+                    key={fw}
+                    value={fw}
+                    disabled={!isAvailable}
+                    className={!isAvailable ? "opacity-50" : ""}
+                  >
+                    {frameworkLabels[fw]}
+                    {!isAvailable && " (unavailable)"}
+                  </SelectItem>
+                );
+              }
+            )}
           </SelectContent>
         </Select>
       </div>
