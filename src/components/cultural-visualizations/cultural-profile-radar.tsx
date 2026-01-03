@@ -281,7 +281,7 @@ export function CulturalProfileRadar({
       string,
       { key: string; name: string; groupNumber?: number; color: string }
     >();
-    
+
     // Track countries per group to assign variations
     const groupCountries = new Map<number, string[]>();
     const ungroupedCountries: string[] = [];
@@ -297,7 +297,7 @@ export function CulturalProfileRadar({
           groupNumber: node.groupNumber,
           color: "", // Will be set in second pass
         });
-        
+
         if (node.groupNumber !== undefined) {
           const groupList = groupCountries.get(node.groupNumber) || [];
           groupList.push(countryKey);

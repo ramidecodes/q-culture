@@ -12,6 +12,7 @@ import {
 import { NetworkGraph } from "./network-graph";
 import { DistanceMatrixHeatmap } from "./distance-matrix-heatmap";
 import { CulturalProfileRadar } from "./cultural-profile-radar";
+import { CountryParameterBarChart } from "./country-parameter-bar-chart";
 import type { Framework } from "@/types/cultural";
 import type { VisualizationData } from "@/lib/db/queries/visualization-queries";
 import type { GraphData } from "@/lib/utils/visualization-data";
@@ -126,6 +127,7 @@ export function VisualizationView({
           <TabsTrigger value="network">Network Graph</TabsTrigger>
           <TabsTrigger value="heatmap">Distance Matrix</TabsTrigger>
           <TabsTrigger value="radar">Cultural Profile</TabsTrigger>
+          <TabsTrigger value="bar">Parameter Comparison</TabsTrigger>
         </TabsList>
         <TabsContent value="network" className="mt-4">
           <div className="rounded-lg border bg-background p-4">
@@ -169,6 +171,21 @@ export function VisualizationView({
               Each polygon represents a country's cultural profile across the
               selected framework dimensions. Countries in the same group are
               overlaid for comparison.
+            </p>
+          </div>
+        </TabsContent>
+        <TabsContent value="bar" className="mt-4">
+          <div className="rounded-lg border bg-background p-4">
+            <CountryParameterBarChart
+              data={visualizationData.graphData as GraphData}
+              framework={framework}
+            />
+          </div>
+          <div className="mt-4 text-sm text-muted-foreground">
+            <p>
+              Compare countries by a specific cultural parameter. Use the
+              dropdown to select which dimension to visualize. Countries are
+              sorted by score value.
             </p>
           </div>
         </TabsContent>
