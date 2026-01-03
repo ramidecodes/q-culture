@@ -80,6 +80,13 @@ export function NetworkGraph({
   const [edgeMode, setEdgeMode] = useState<"aggregate" | "dimensional">(
     "aggregate"
   );
+  const [tooltip, setTooltip] = useState<{
+    type: "node" | "edge";
+    content: React.ReactNode;
+    x: number;
+    y: number;
+  } | null>(null);
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
   // Pre-compute max distance for normalization
   const maxDistance = useMemo(
@@ -428,89 +435,344 @@ export function NetworkGraph({
     [onNodeClick]
   );
 
-  const handleNodeHover = useCallback(
-    (node: LibraryNode | null) => {
-      if (node && isGraphNode(node)) {
-        const graphNode = toGraphNode(node);
-        setHoveredNode(graphNode);
-        onNodeHover?.(graphNode);
-      } else {
-        setHoveredNode(null);
-        onNodeHover?.(null);
-      }
-    },
-    [onNodeHover]
-  );
-
-  const getNodeLabel = useCallback(
-    (node: LibraryNode): string => {
+  // Format node tooltip content as React component
+  const formatNodeTooltip = useCallback(
+    (node: LibraryNode): React.ReactNode => {
       const n = node as LibraryNode & Partial<GraphNode>;
       const name = n.name ?? "";
       const country = n.country ?? "";
       const scores = n.culturalScores;
 
       if (!scores || !framework) {
-        return `${name} (${country})`;
+        return (
+          <div className="space-y-1">
+            <div className="font-semibold text-foreground">{name}</div>
+            <div className="text-xs text-muted-foreground">{country}</div>
+          </div>
+        );
       }
 
-      const lines: string[] = [`${name} (${country})`, "---"];
+      const scoreItems: React.ReactNode[] = [];
 
       // Format scores based on framework
       if (framework === "hofstede" && scores.hofstede) {
-        lines.push(`Power Distance: ${scores.hofstede.powerDistance}`);
-        lines.push(`Individualism: ${scores.hofstede.individualism}`);
-        lines.push(`Masculinity: ${scores.hofstede.masculinity}`);
-        lines.push(
-          `Uncertainty Avoidance: ${scores.hofstede.uncertaintyAvoidance}`
+        scoreItems.push(
+          <div key="powerDistance" className="flex justify-between text-xs">
+            <span className="text-muted-foreground">Power Distance</span>
+            <span className="font-mono font-medium text-foreground">
+              {scores.hofstede.powerDistance}
+            </span>
+          </div>
         );
-        lines.push(
-          `Long-term Orientation: ${scores.hofstede.longTermOrientation}`
+        scoreItems.push(
+          <div key="individualism" className="flex justify-between text-xs">
+            <span className="text-muted-foreground">Individualism</span>
+            <span className="font-mono font-medium text-foreground">
+              {scores.hofstede.individualism}
+            </span>
+          </div>
         );
-        lines.push(`Indulgence: ${scores.hofstede.indulgence}`);
+        scoreItems.push(
+          <div key="masculinity" className="flex justify-between text-xs">
+            <span className="text-muted-foreground">Masculinity</span>
+            <span className="font-mono font-medium text-foreground">
+              {scores.hofstede.masculinity}
+            </span>
+          </div>
+        );
+        scoreItems.push(
+          <div
+            key="uncertaintyAvoidance"
+            className="flex justify-between text-xs"
+          >
+            <span className="text-muted-foreground">Uncertainty Avoidance</span>
+            <span className="font-mono font-medium text-foreground">
+              {scores.hofstede.uncertaintyAvoidance}
+            </span>
+          </div>
+        );
+        scoreItems.push(
+          <div
+            key="longTermOrientation"
+            className="flex justify-between text-xs"
+          >
+            <span className="text-muted-foreground">
+              Long-term Orientation
+            </span>
+            <span className="font-mono font-medium text-foreground">
+              {scores.hofstede.longTermOrientation}
+            </span>
+          </div>
+        );
+        scoreItems.push(
+          <div key="indulgence" className="flex justify-between text-xs">
+            <span className="text-muted-foreground">Indulgence</span>
+            <span className="font-mono font-medium text-foreground">
+              {scores.hofstede.indulgence}
+            </span>
+          </div>
+        );
       } else if (framework === "lewis" && scores.lewis) {
-        lines.push(`Linear Active: ${scores.lewis.linearActive}`);
-        lines.push(`Multi Active: ${scores.lewis.multiActive}`);
-        lines.push(`Reactive: ${scores.lewis.reactive}`);
+        scoreItems.push(
+          <div key="linearActive" className="flex justify-between text-xs">
+            <span className="text-muted-foreground">Linear Active</span>
+            <span className="font-mono font-medium text-foreground">
+              {scores.lewis.linearActive}
+            </span>
+          </div>
+        );
+        scoreItems.push(
+          <div key="multiActive" className="flex justify-between text-xs">
+            <span className="text-muted-foreground">Multi Active</span>
+            <span className="font-mono font-medium text-foreground">
+              {scores.lewis.multiActive}
+            </span>
+          </div>
+        );
+        scoreItems.push(
+          <div key="reactive" className="flex justify-between text-xs">
+            <span className="text-muted-foreground">Reactive</span>
+            <span className="font-mono font-medium text-foreground">
+              {scores.lewis.reactive}
+            </span>
+          </div>
+        );
       } else if (framework === "hall" && scores.hall) {
-        lines.push(`Context (High): ${scores.hall.contextHigh}`);
-        lines.push(`Time (Polychronic): ${scores.hall.timePolychronic}`);
-        lines.push(`Space (Private): ${scores.hall.spacePrivate}`);
+        scoreItems.push(
+          <div key="contextHigh" className="flex justify-between text-xs">
+            <span className="text-muted-foreground">Context (High)</span>
+            <span className="font-mono font-medium text-foreground">
+              {scores.hall.contextHigh}
+            </span>
+          </div>
+        );
+        scoreItems.push(
+          <div key="timePolychronic" className="flex justify-between text-xs">
+            <span className="text-muted-foreground">Time (Polychronic)</span>
+            <span className="font-mono font-medium text-foreground">
+              {scores.hall.timePolychronic}
+            </span>
+          </div>
+        );
+        scoreItems.push(
+          <div key="spacePrivate" className="flex justify-between text-xs">
+            <span className="text-muted-foreground">Space (Private)</span>
+            <span className="font-mono font-medium text-foreground">
+              {scores.hall.spacePrivate}
+            </span>
+          </div>
+        );
       } else if (framework === "combined") {
         // Show all available frameworks
         if (scores.hofstede) {
-          lines.push("Hofstede:");
-          lines.push(`  Power Distance: ${scores.hofstede.powerDistance}`);
-          lines.push(`  Individualism: ${scores.hofstede.individualism}`);
-          lines.push(`  Masculinity: ${scores.hofstede.masculinity}`);
-          lines.push(
-            `  Uncertainty Avoidance: ${scores.hofstede.uncertaintyAvoidance}`
+          scoreItems.push(
+            <div key="hofstede-header" className="text-xs font-medium text-muted-foreground mt-2 first:mt-0">
+              Hofstede
+            </div>
           );
-          lines.push(
-            `  Long-term Orientation: ${scores.hofstede.longTermOrientation}`
+          scoreItems.push(
+            <div key="powerDistance" className="flex justify-between text-xs">
+              <span className="text-muted-foreground">Power Distance</span>
+              <span className="font-mono font-medium text-foreground">
+                {scores.hofstede.powerDistance}
+              </span>
+            </div>
           );
-          lines.push(`  Indulgence: ${scores.hofstede.indulgence}`);
+          scoreItems.push(
+            <div key="individualism" className="flex justify-between text-xs">
+              <span className="text-muted-foreground">Individualism</span>
+              <span className="font-mono font-medium text-foreground">
+                {scores.hofstede.individualism}
+              </span>
+            </div>
+          );
+          scoreItems.push(
+            <div key="masculinity" className="flex justify-between text-xs">
+              <span className="text-muted-foreground">Masculinity</span>
+              <span className="font-mono font-medium text-foreground">
+                {scores.hofstede.masculinity}
+              </span>
+            </div>
+          );
+          scoreItems.push(
+            <div
+              key="uncertaintyAvoidance"
+              className="flex justify-between text-xs"
+            >
+              <span className="text-muted-foreground">Uncertainty Avoidance</span>
+              <span className="font-mono font-medium text-foreground">
+                {scores.hofstede.uncertaintyAvoidance}
+              </span>
+            </div>
+          );
+          scoreItems.push(
+            <div
+              key="longTermOrientation"
+              className="flex justify-between text-xs"
+            >
+              <span className="text-muted-foreground">
+                Long-term Orientation
+              </span>
+              <span className="font-mono font-medium text-foreground">
+                {scores.hofstede.longTermOrientation}
+              </span>
+            </div>
+          );
+          scoreItems.push(
+            <div key="indulgence" className="flex justify-between text-xs">
+              <span className="text-muted-foreground">Indulgence</span>
+              <span className="font-mono font-medium text-foreground">
+                {scores.hofstede.indulgence}
+              </span>
+            </div>
+          );
         }
         if (scores.lewis) {
-          lines.push("Lewis:");
-          lines.push(`  Linear Active: ${scores.lewis.linearActive}`);
-          lines.push(`  Multi Active: ${scores.lewis.multiActive}`);
-          lines.push(`  Reactive: ${scores.lewis.reactive}`);
+          scoreItems.push(
+            <div key="lewis-header" className="text-xs font-medium text-muted-foreground mt-2 first:mt-0">
+              Lewis
+            </div>
+          );
+          scoreItems.push(
+            <div key="linearActive" className="flex justify-between text-xs">
+              <span className="text-muted-foreground">Linear Active</span>
+              <span className="font-mono font-medium text-foreground">
+                {scores.lewis.linearActive}
+              </span>
+            </div>
+          );
+          scoreItems.push(
+            <div key="multiActive" className="flex justify-between text-xs">
+              <span className="text-muted-foreground">Multi Active</span>
+              <span className="font-mono font-medium text-foreground">
+                {scores.lewis.multiActive}
+              </span>
+            </div>
+          );
+          scoreItems.push(
+            <div key="reactive" className="flex justify-between text-xs">
+              <span className="text-muted-foreground">Reactive</span>
+              <span className="font-mono font-medium text-foreground">
+                {scores.lewis.reactive}
+              </span>
+            </div>
+          );
         }
         if (scores.hall) {
-          lines.push("Hall:");
-          lines.push(`  Context (High): ${scores.hall.contextHigh}`);
-          lines.push(`  Time (Polychronic): ${scores.hall.timePolychronic}`);
-          lines.push(`  Space (Private): ${scores.hall.spacePrivate}`);
+          scoreItems.push(
+            <div key="hall-header" className="text-xs font-medium text-muted-foreground mt-2 first:mt-0">
+              Hall
+            </div>
+          );
+          scoreItems.push(
+            <div key="contextHigh" className="flex justify-between text-xs">
+              <span className="text-muted-foreground">Context (High)</span>
+              <span className="font-mono font-medium text-foreground">
+                {scores.hall.contextHigh}
+              </span>
+            </div>
+          );
+          scoreItems.push(
+            <div key="timePolychronic" className="flex justify-between text-xs">
+              <span className="text-muted-foreground">Time (Polychronic)</span>
+              <span className="font-mono font-medium text-foreground">
+                {scores.hall.timePolychronic}
+              </span>
+            </div>
+          );
+          scoreItems.push(
+            <div key="spacePrivate" className="flex justify-between text-xs">
+              <span className="text-muted-foreground">Space (Private)</span>
+              <span className="font-mono font-medium text-foreground">
+                {scores.hall.spacePrivate}
+              </span>
+            </div>
+          );
         }
       }
 
-      return lines.join("\n");
+      return (
+        <div className="space-y-2">
+          <div>
+            <div className="font-semibold text-foreground">{name}</div>
+            <div className="text-xs text-muted-foreground">{country}</div>
+          </div>
+          {scoreItems.length > 0 && (
+            <div className="border-t border-border pt-2 mt-2 space-y-1">
+              <div className="text-xs font-medium text-muted-foreground mb-1">
+                Cultural Dimensions
+              </div>
+              {scoreItems}
+            </div>
+          )}
+        </div>
+      );
     },
     [framework]
   );
 
-  const getLinkLabel = useCallback(
-    (link: LibraryLink): string => {
+  const handleNodeHover = useCallback(
+    (node: LibraryNode | null) => {
+      if (node && isGraphNode(node)) {
+        const graphNode = toGraphNode(node);
+        setHoveredNode(graphNode);
+        onNodeHover?.(graphNode);
+
+        // Transform graph coordinates to screen coordinates
+        if (node.x !== undefined && node.y !== undefined && graphRef.current) {
+          const screenCoords = graphRef.current.graph2ScreenCoords(
+            node.x,
+            node.y
+          );
+          if (screenCoords) {
+            setTooltip({
+              type: "node",
+              content: formatNodeTooltip(node),
+              x: screenCoords.x,
+              y: screenCoords.y,
+            });
+          }
+        }
+      } else {
+        setHoveredNode(null);
+        onNodeHover?.(null);
+        setTooltip(null);
+      }
+    },
+    [onNodeHover, formatNodeTooltip]
+  );
+
+  // Disable native tooltips - we use custom tooltips instead
+  const getNodeLabel = useCallback((): string => {
+    return "";
+  }, []);
+
+  // Helper to extract node ID from source/target (can be string or NodeObject)
+  const getNodeId = useCallback(
+    (node: string | LibraryNode | undefined): string => {
+      if (!node) {
+        return "";
+      }
+      if (typeof node === "string") {
+        return node;
+      }
+      return String(node.id ?? "");
+    },
+    []
+  );
+
+  // Disable native tooltips - we use custom tooltips instead
+  const getLinkLabel = useCallback((): string => {
+    return "";
+  }, []);
+
+  const handleEngineStop = useCallback(() => {
+    graphRef.current?.zoomToFit(400);
+  }, []);
+
+  // Format edge tooltip content as React component
+  const formatEdgeTooltip = useCallback(
+    (link: LibraryLink): React.ReactNode => {
       const graphLink = link as LibraryLink &
         Partial<GraphLink> & {
           dimensionLabel?: string;
@@ -520,55 +782,82 @@ export function NetworkGraph({
       const linkDistance = graphLink.distance ?? 0;
 
       if (edgeMode === "dimensional" && graphLink.dimensionLabel) {
+        // Extract IDs properly
+        const sourceId = getNodeId(graphLink.source);
+        const targetId = getNodeId(graphLink.target);
+
         // Find source and target nodes to get their names
-        const sourceNode = data.nodes.find(
-          (n) => n.id === String(graphLink.source)
-        );
-        const targetNode = data.nodes.find(
-          (n) => n.id === String(graphLink.target)
-        );
+        const sourceNode = data.nodes.find((n) => n.id === sourceId);
+        const targetNode = data.nodes.find((n) => n.id === targetId);
 
         const sourceName = sourceNode
           ? `${sourceNode.name} (${sourceNode.country})`
-          : String(graphLink.source);
+          : sourceId;
         const targetName = targetNode
           ? `${targetNode.name} (${targetNode.country})`
-          : String(graphLink.target);
-
-        const lines: string[] = [graphLink.dimensionLabel, "---"];
-
-        // Show both nodes' values if available
-        if (
-          graphLink.sourceValue !== undefined &&
-          graphLink.targetValue !== undefined
-        ) {
-          lines.push(`${sourceName}: ${graphLink.sourceValue}`);
-          lines.push(`${targetName}: ${graphLink.targetValue}`);
-          lines.push("---");
-        }
+          : targetId;
 
         // Calculate similarity percentage (inverse of distance)
         const similarity = (1 - linkDistance) * 100;
-        lines.push(
-          `Similarity: ${similarity.toFixed(
-            1
-          )}% (distance: ${linkDistance.toFixed(3)})`
-        );
 
-        return lines.join("\n");
+        return (
+          <div className="space-y-2">
+            <div className="font-semibold text-foreground">
+              {graphLink.dimensionLabel}
+            </div>
+            {graphLink.sourceValue !== undefined &&
+              graphLink.targetValue !== undefined && (
+                <div className="border-t border-border pt-2 space-y-1.5">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-muted-foreground truncate pr-2">
+                      {sourceName}
+                    </span>
+                    <span className="font-mono font-medium text-foreground flex-shrink-0">
+                      {graphLink.sourceValue}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-muted-foreground truncate pr-2">
+                      {targetName}
+                    </span>
+                    <span className="font-mono font-medium text-foreground flex-shrink-0">
+                      {graphLink.targetValue}
+                    </span>
+                  </div>
+                </div>
+              )}
+            <div className="border-t border-border pt-2">
+              <div className="text-xs">
+                <span className="text-muted-foreground">Similarity: </span>
+                <span className="text-foreground font-medium">
+                  {similarity.toFixed(1)}%
+                </span>
+                <span className="text-muted-foreground text-[10px] ml-1">
+                  (distance: {linkDistance.toFixed(3)})
+                </span>
+              </div>
+            </div>
+          </div>
+        );
       }
 
       // Aggregate mode
-      return `Cultural Distance: ${linkDistance.toFixed(
-        3
-      )}\n(thicker = more similar)`;
+      return (
+        <div className="space-y-1">
+          <div className="font-semibold text-foreground">Cultural Distance</div>
+          <div className="text-xs">
+            <span className="font-mono font-medium text-foreground">
+              {linkDistance.toFixed(3)}
+            </span>
+          </div>
+          <div className="text-xs text-muted-foreground pt-1 border-t border-border">
+            (thicker = more similar)
+          </div>
+        </div>
+      );
     },
-    [edgeMode, data.nodes]
+    [edgeMode, data.nodes, getNodeId]
   );
-
-  const handleEngineStop = useCallback(() => {
-    graphRef.current?.zoomToFit(400);
-  }, []);
 
   // Track container dimensions
   useEffect(() => {
@@ -582,6 +871,23 @@ export function NetworkGraph({
 
     observer.observe(container);
     return () => observer.disconnect();
+  }, []);
+
+  // Track mouse position for edge tooltips
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const rect = container.getBoundingClientRect();
+      setMousePosition({
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top,
+      });
+    };
+
+    container.addEventListener("mousemove", handleMouseMove);
+    return () => container.removeEventListener("mousemove", handleMouseMove);
   }, []);
 
   // Custom node rendering with labels
@@ -662,6 +968,37 @@ export function NetworkGraph({
         className="relative w-full"
         style={{ aspectRatio: "16/9", minHeight: "500px" }}
       >
+        {/* Custom Tooltip */}
+        {tooltip && (
+          <div
+            className="absolute z-50 pointer-events-none"
+            style={{
+              left: `${tooltip.x}px`,
+              top: `${tooltip.y}px`,
+              transform:
+                tooltip.type === "node"
+                  ? "translate(-50%, calc(-100% - 12px))"
+                  : "translate(12px, -50%)",
+            }}
+          >
+            <div className="bg-popover border border-border rounded-lg shadow-lg p-3 text-sm max-w-xs min-w-[200px]">
+              {tooltip.content}
+            </div>
+            {/* Tooltip arrow */}
+            <div
+              className="absolute w-2 h-2 bg-popover border-r border-b border-border"
+              style={{
+                left: tooltip.type === "node" ? "50%" : "0px",
+                top: tooltip.type === "node" ? "100%" : "50%",
+                transform:
+                  tooltip.type === "node"
+                    ? "translate(-50%, -50%) rotate(45deg)"
+                    : "translate(-50%, -50%) rotate(45deg)",
+              }}
+            />
+          </div>
+        )}
+
         <ForceGraph2D
           ref={graphRef}
           graphData={transformedGraphData}
@@ -713,6 +1050,18 @@ export function NetworkGraph({
           }}
           onNodeClick={handleNodeClick}
           onNodeHover={handleNodeHover}
+          onLinkHover={(link: LibraryLink | null) => {
+            if (link) {
+              setTooltip({
+                type: "edge",
+                content: formatEdgeTooltip(link),
+                x: mousePosition.x,
+                y: mousePosition.y,
+              });
+            } else {
+              setTooltip(null);
+            }
+          }}
           cooldownTicks={100}
           onEngineStop={handleEngineStop}
           backgroundColor="transparent"
