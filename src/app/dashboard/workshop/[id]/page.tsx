@@ -83,74 +83,6 @@ export default async function WorkshopPage({ params }: PageProps) {
         </div>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Join Code</CardTitle>
-            <CardDescription>
-              Share this code with participants so they can join your workshop
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <WorkshopJoinCode joinCode={workshop.joinCode} />
-            <div className="border-t pt-6">
-              <WorkshopQRCode joinCode={workshop.joinCode} />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Workshop Details</CardTitle>
-            <CardDescription>Information about this workshop</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <div className="text-sm font-medium text-muted-foreground">
-                Status
-              </div>
-              <div className="mt-1">
-                <WorkshopStatusBadge status={workshop.status} />
-              </div>
-            </div>
-            {workshop.framework && (
-              <div>
-                <div className="text-sm font-medium text-muted-foreground">
-                  Framework
-                </div>
-                <div className="mt-1 text-sm">{workshop.framework}</div>
-              </div>
-            )}
-            {workshop.groupSize !== undefined && (
-              <div>
-                <div className="text-sm font-medium text-muted-foreground">
-                  Group Size
-                </div>
-                <div className="mt-1 text-sm">
-                  {workshop.groupSize === null
-                    ? "Flexible (3-4 participants)"
-                    : `${workshop.groupSize} participants per group`}
-                </div>
-              </div>
-            )}
-            <div>
-              <div className="text-sm font-medium text-muted-foreground">
-                Created
-              </div>
-              <div className="mt-1 text-sm">
-                {new Date(workshop.createdAt).toLocaleDateString("en-US", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                  hour: "numeric",
-                  minute: "2-digit",
-                })}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
       <Tabs defaultValue="overview" className="w-full">
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
@@ -162,74 +94,121 @@ export default async function WorkshopPage({ params }: PageProps) {
             )}
         </TabsList>
         <TabsContent value="overview" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Workshop Overview</CardTitle>
-              <CardDescription>
-                Manage your workshop and track participant progress
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                {workshop.status === "draft" &&
-                  "Your workshop is in draft mode. Start collecting participants when you're ready."}
-                {workshop.status === "collecting" &&
-                  "Your workshop is accepting participants. Share the join code to invite people."}
-                {workshop.status === "grouped" &&
-                  "Participants have been assigned to groups. They can now view their groups and submit reflections."}
-                {workshop.status === "closed" &&
-                  "This workshop is closed. No further actions can be taken."}
-              </p>
-              {workshop.status !== "closed" && (
-                <div>
-                  <div className="text-sm font-medium text-muted-foreground mb-2">
-                    Workshop State
-                  </div>
-                  <WorkshopStateControls
-                    workshopId={workshop.id}
-                    currentStatus={workshop.status}
-                  />
+          <div className="grid gap-6 md:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>Join Code</CardTitle>
+                <CardDescription>
+                  Share this code with participants so they can join your workshop
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <WorkshopJoinCode joinCode={workshop.joinCode} />
+                <div className="border-t pt-6">
+                  <WorkshopQRCode joinCode={workshop.joinCode} />
                 </div>
-              )}
-              {!hasGroups && workshop.status !== "closed" && (
-                <div className="space-y-4">
-                  {(!workshop.framework || workshop.groupSize === null) && (
-                    <div>
-                      <Button asChild variant="outline">
-                        <Link href={`/dashboard/workshop/${id}/configure`}>
-                          <Settings className="mr-2 h-4 w-4" />
-                          Configure Grouping
-                        </Link>
-                      </Button>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Workshop Details</CardTitle>
+                <CardDescription>Information about this workshop</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <div className="text-sm font-medium text-muted-foreground">
+                    Status
+                  </div>
+                  <div className="mt-1">
+                    <WorkshopStatusBadge status={workshop.status} />
+                  </div>
+                </div>
+                {workshop.framework && (
+                  <div>
+                    <div className="text-sm font-medium text-muted-foreground">
+                      Framework
                     </div>
-                  )}
-                  {workshop.framework && workshop.groupSize !== null && (
-                    <div className="space-y-4">
-                      <div>
-                        <div className="text-sm font-medium mb-2">
-                          Ready to Generate Groups
-                        </div>
-                        <p className="text-sm text-muted-foreground mb-4">
-                          Your grouping configuration is complete. Click the
-                          button below to generate diverse groups based on
-                          cultural distances.
-                        </p>
-                        <GenerateGroupsButton workshopId={workshop.id} />
-                      </div>
-                      <div>
-                        <Button asChild variant="outline" size="sm">
+                    <div className="mt-1 text-sm">{workshop.framework}</div>
+                  </div>
+                )}
+                {workshop.groupSize !== undefined && (
+                  <div>
+                    <div className="text-sm font-medium text-muted-foreground">
+                      Group Size
+                    </div>
+                    <div className="mt-1 text-sm">
+                      {workshop.groupSize === null
+                        ? "Flexible (3-4 participants)"
+                        : `${workshop.groupSize} participants per group`}
+                    </div>
+                  </div>
+                )}
+                <div>
+                  <div className="text-sm font-medium text-muted-foreground">
+                    Created
+                  </div>
+                  <div className="mt-1 text-sm">
+                    {new Date(workshop.createdAt).toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                      hour: "numeric",
+                      minute: "2-digit",
+                    })}
+                  </div>
+                </div>
+                {workshop.status !== "closed" && (
+                  <div className="border-t pt-4">
+                    <div className="text-sm font-medium text-muted-foreground mb-2">
+                      Workshop State
+                    </div>
+                    <WorkshopStateControls
+                      workshopId={workshop.id}
+                      currentStatus={workshop.status}
+                    />
+                  </div>
+                )}
+                {!hasGroups && workshop.status !== "closed" && (
+                  <div className="space-y-4">
+                    {(!workshop.framework || workshop.groupSize === null) && (
+                      <div className="border-t pt-4">
+                        <Button asChild variant="outline">
                           <Link href={`/dashboard/workshop/${id}/configure`}>
                             <Settings className="mr-2 h-4 w-4" />
-                            Change Configuration
+                            Configure Grouping
                           </Link>
                         </Button>
                       </div>
-                    </div>
-                  )}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                    )}
+                    {workshop.framework && workshop.groupSize !== null && (
+                      <div className="space-y-4 border-t pt-4">
+                        <div>
+                          <div className="text-sm font-medium mb-2">
+                            Ready to Generate Groups
+                          </div>
+                          <p className="text-sm text-muted-foreground mb-4">
+                            Your grouping configuration is complete. Click the
+                            button below to generate diverse groups based on
+                            cultural distances.
+                          </p>
+                          <GenerateGroupsButton workshopId={workshop.id} />
+                        </div>
+                        <div>
+                          <Button asChild variant="outline" size="sm">
+                            <Link href={`/dashboard/workshop/${id}/configure`}>
+                              <Settings className="mr-2 h-4 w-4" />
+                              Change Configuration
+                            </Link>
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
         <TabsContent value="participants" className="space-y-6">
           <div className="grid gap-6 md:grid-cols-3">
