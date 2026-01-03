@@ -183,8 +183,8 @@ function computeLewisDimensionalDistances(
     throw new Error("Missing Lewis scores");
   }
 
-  // Normalize by max possible difference (100 for percentage-based scores)
-  const maxDiff = 100;
+  // Scores are normalized (0-1 scale), so max possible difference is 1
+  const maxDiff = 1;
 
   return [
     {
@@ -222,8 +222,8 @@ function computeHallDimensionalDistances(
     throw new Error("Missing Hall scores");
   }
 
-  // Normalize by max possible difference (100 for percentage-based scores)
-  const maxDiff = 100;
+  // Scores are normalized (0-1 scale), so max possible difference is 1
+  const maxDiff = 1;
 
   return [
     {
@@ -262,8 +262,8 @@ function computeHofstedeDimensionalDistances(
     throw new Error("Missing Hofstede scores");
   }
 
-  // Normalize by max possible difference (100 for Hofstede scores)
-  const maxDiff = 100;
+  // Scores are normalized (0-1 scale), so max possible difference is 1
+  const maxDiff = 1;
 
   return [
     {
