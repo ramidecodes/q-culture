@@ -191,16 +191,22 @@ function computeLewisDimensionalDistances(
       dimension: "linearActive",
       label: "Linear Active",
       distance: Math.abs(scores1.linearActive - scores2.linearActive) / maxDiff,
+      sourceValue: scores1.linearActive,
+      targetValue: scores2.linearActive,
     },
     {
       dimension: "multiActive",
       label: "Multi Active",
       distance: Math.abs(scores1.multiActive - scores2.multiActive) / maxDiff,
+      sourceValue: scores1.multiActive,
+      targetValue: scores2.multiActive,
     },
     {
       dimension: "reactive",
       label: "Reactive",
       distance: Math.abs(scores1.reactive - scores2.reactive) / maxDiff,
+      sourceValue: scores1.reactive,
+      targetValue: scores2.reactive,
     },
   ];
 }
@@ -224,17 +230,23 @@ function computeHallDimensionalDistances(
       dimension: "contextHigh",
       label: "Context (High)",
       distance: Math.abs(scores1.contextHigh - scores2.contextHigh) / maxDiff,
+      sourceValue: scores1.contextHigh,
+      targetValue: scores2.contextHigh,
     },
     {
       dimension: "timePolychronic",
       label: "Time (Polychronic)",
       distance:
         Math.abs(scores1.timePolychronic - scores2.timePolychronic) / maxDiff,
+      sourceValue: scores1.timePolychronic,
+      targetValue: scores2.timePolychronic,
     },
     {
       dimension: "spacePrivate",
       label: "Space (Private)",
       distance: Math.abs(scores1.spacePrivate - scores2.spacePrivate) / maxDiff,
+      sourceValue: scores1.spacePrivate,
+      targetValue: scores2.spacePrivate,
     },
   ];
 }
@@ -259,17 +271,23 @@ function computeHofstedeDimensionalDistances(
       label: "Power Distance",
       distance:
         Math.abs(scores1.powerDistance - scores2.powerDistance) / maxDiff,
+      sourceValue: scores1.powerDistance,
+      targetValue: scores2.powerDistance,
     },
     {
       dimension: "individualism",
       label: "Individualism",
       distance:
         Math.abs(scores1.individualism - scores2.individualism) / maxDiff,
+      sourceValue: scores1.individualism,
+      targetValue: scores2.individualism,
     },
     {
       dimension: "masculinity",
       label: "Masculinity",
       distance: Math.abs(scores1.masculinity - scores2.masculinity) / maxDiff,
+      sourceValue: scores1.masculinity,
+      targetValue: scores2.masculinity,
     },
     {
       dimension: "uncertaintyAvoidance",
@@ -278,6 +296,8 @@ function computeHofstedeDimensionalDistances(
         Math.abs(
           scores1.uncertaintyAvoidance - scores2.uncertaintyAvoidance
         ) / maxDiff,
+      sourceValue: scores1.uncertaintyAvoidance,
+      targetValue: scores2.uncertaintyAvoidance,
     },
     {
       dimension: "longTermOrientation",
@@ -286,11 +306,15 @@ function computeHofstedeDimensionalDistances(
         Math.abs(
           scores1.longTermOrientation - scores2.longTermOrientation
         ) / maxDiff,
+      sourceValue: scores1.longTermOrientation,
+      targetValue: scores2.longTermOrientation,
     },
     {
       dimension: "indulgence",
       label: "Indulgence",
       distance: Math.abs(scores1.indulgence - scores2.indulgence) / maxDiff,
+      sourceValue: scores1.indulgence,
+      targetValue: scores2.indulgence,
     },
   ];
 }

@@ -175,10 +175,14 @@ export function NetworkGraph({
             // Store dimension info in the link for rendering
             dimension: dimDist.dimension,
             dimensionLabel: dimDist.label,
+            sourceValue: dimDist.sourceValue,
+            targetValue: dimDist.targetValue,
             curvature: curvatureOffset,
           } as GraphLink & {
             dimension: string;
             dimensionLabel: string;
+            sourceValue?: number;
+            targetValue?: number;
             curvature: number;
           });
         });
@@ -375,7 +379,23 @@ export function NetworkGraph({
     [maxDistance, edgeMode, framework, getDimensionColor]
   );
 
-  // Edge width based on distance (inverse) - thicker for SMALLER distances (stronger similarity)
+  /**
+   * Edge width based on distance (inverse) - thicker for SMALLER distances (stronger similarity)
+   *
+   * Encoding logic:
+   * - Thicker edges = more similar (smaller distance)
+   * - Thinner edges = less similar (larger distance)
+   *
+   * Aggregate mode:
+   *   - Distance is normalized by maxDistance (0-1 range)
+   *   - Thickness: 1 + (1 - normalized) * 4 = range 1-5px
+   *   - Small distance → high (1-normalized) → thick edge ✓
+   *
+   * Dimensional mode:
+   *   - Distance is already normalized 0-1 from computeDimensionalDistances
+   *   - Thickness: 0.5 + (1 - distance) * 2.5 = range 0.5-3px
+   *   - Small distance → high (1-distance) → thick edge ✓
+   */
   const getEdgeWidth = useCallback(
     (link: LibraryLink): number => {
       const graphLink = link as LibraryLink & Partial<GraphLink>;
@@ -422,26 +442,128 @@ export function NetworkGraph({
     [onNodeHover]
   );
 
-  const getNodeLabel = useCallback((node: LibraryNode): string => {
-    const n = node as LibraryNode & Partial<GraphNode>;
-    return `${n.name ?? ""} (${n.country ?? ""})`;
-  }, []);
+  const getNodeLabel = useCallback(
+    (node: LibraryNode): string => {
+      const n = node as LibraryNode & Partial<GraphNode>;
+      const name = n.name ?? "";
+      const country = n.country ?? "";
+      const scores = n.culturalScores;
+
+      if (!scores || !framework) {
+        return `${name} (${country})`;
+      }
+
+      const lines: string[] = [`${name} (${country})`, "---"];
+
+      // Format scores based on framework
+      if (framework === "hofstede" && scores.hofstede) {
+        lines.push(`Power Distance: ${scores.hofstede.powerDistance}`);
+        lines.push(`Individualism: ${scores.hofstede.individualism}`);
+        lines.push(`Masculinity: ${scores.hofstede.masculinity}`);
+        lines.push(
+          `Uncertainty Avoidance: ${scores.hofstede.uncertaintyAvoidance}`
+        );
+        lines.push(
+          `Long-term Orientation: ${scores.hofstede.longTermOrientation}`
+        );
+        lines.push(`Indulgence: ${scores.hofstede.indulgence}`);
+      } else if (framework === "lewis" && scores.lewis) {
+        lines.push(`Linear Active: ${scores.lewis.linearActive}`);
+        lines.push(`Multi Active: ${scores.lewis.multiActive}`);
+        lines.push(`Reactive: ${scores.lewis.reactive}`);
+      } else if (framework === "hall" && scores.hall) {
+        lines.push(`Context (High): ${scores.hall.contextHigh}`);
+        lines.push(`Time (Polychronic): ${scores.hall.timePolychronic}`);
+        lines.push(`Space (Private): ${scores.hall.spacePrivate}`);
+      } else if (framework === "combined") {
+        // Show all available frameworks
+        if (scores.hofstede) {
+          lines.push("Hofstede:");
+          lines.push(`  Power Distance: ${scores.hofstede.powerDistance}`);
+          lines.push(`  Individualism: ${scores.hofstede.individualism}`);
+          lines.push(`  Masculinity: ${scores.hofstede.masculinity}`);
+          lines.push(
+            `  Uncertainty Avoidance: ${scores.hofstede.uncertaintyAvoidance}`
+          );
+          lines.push(
+            `  Long-term Orientation: ${scores.hofstede.longTermOrientation}`
+          );
+          lines.push(`  Indulgence: ${scores.hofstede.indulgence}`);
+        }
+        if (scores.lewis) {
+          lines.push("Lewis:");
+          lines.push(`  Linear Active: ${scores.lewis.linearActive}`);
+          lines.push(`  Multi Active: ${scores.lewis.multiActive}`);
+          lines.push(`  Reactive: ${scores.lewis.reactive}`);
+        }
+        if (scores.hall) {
+          lines.push("Hall:");
+          lines.push(`  Context (High): ${scores.hall.contextHigh}`);
+          lines.push(`  Time (Polychronic): ${scores.hall.timePolychronic}`);
+          lines.push(`  Space (Private): ${scores.hall.spacePrivate}`);
+        }
+      }
+
+      return lines.join("\n");
+    },
+    [framework]
+  );
 
   const getLinkLabel = useCallback(
     (link: LibraryLink): string => {
       const graphLink = link as LibraryLink &
         Partial<GraphLink> & {
           dimensionLabel?: string;
+          sourceValue?: number;
+          targetValue?: number;
         };
       const linkDistance = graphLink.distance ?? 0;
 
       if (edgeMode === "dimensional" && graphLink.dimensionLabel) {
-        return `${graphLink.dimensionLabel}: ${linkDistance.toFixed(3)}`;
+        // Find source and target nodes to get their names
+        const sourceNode = data.nodes.find(
+          (n) => n.id === String(graphLink.source)
+        );
+        const targetNode = data.nodes.find(
+          (n) => n.id === String(graphLink.target)
+        );
+
+        const sourceName = sourceNode
+          ? `${sourceNode.name} (${sourceNode.country})`
+          : String(graphLink.source);
+        const targetName = targetNode
+          ? `${targetNode.name} (${targetNode.country})`
+          : String(graphLink.target);
+
+        const lines: string[] = [graphLink.dimensionLabel, "---"];
+
+        // Show both nodes' values if available
+        if (
+          graphLink.sourceValue !== undefined &&
+          graphLink.targetValue !== undefined
+        ) {
+          lines.push(`${sourceName}: ${graphLink.sourceValue}`);
+          lines.push(`${targetName}: ${graphLink.targetValue}`);
+          lines.push("---");
+        }
+
+        // Calculate similarity percentage (inverse of distance)
+        const similarity = (1 - linkDistance) * 100;
+        lines.push(
+          `Similarity: ${similarity.toFixed(
+            1
+          )}% (distance: ${linkDistance.toFixed(3)})`
+        );
+
+        return lines.join("\n");
       }
 
-      return `Distance: ${linkDistance.toFixed(3)}`;
+      // Aggregate mode
+      return `Cultural Distance: ${linkDistance.toFixed(
+        3
+      )}\n(thicker = more similar)`;
     },
-    [edgeMode]
+    [edgeMode, data.nodes]
   );
 
   const handleEngineStop = useCallback(() => {
@@ -519,7 +641,6 @@ export function NetworkGraph({
                 onCheckedChange={(checked) => {
                   setEdgeMode(checked ? "dimensional" : "aggregate");
                 }}
-                // @ts-expect-error - Radix UI types may not be fully available
               />
               <span
                 className={cn(

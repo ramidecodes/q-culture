@@ -28,12 +28,15 @@ export type GraphNode = {
   countryCode: string;
   groupId?: string;
   groupNumber?: number;
+  culturalScores?: CulturalScores;
 };
 
 export type DimensionalDistance = {
   dimension: string;
   label: string;
   distance: number; // normalized 0-1
+  sourceValue?: number; // actual score value from source node
+  targetValue?: number; // actual score value from target node
 };
 
 export type GraphLink = {
@@ -77,6 +80,7 @@ export function transformDistanceMatrixToGraph(
 ): GraphData {
   const nodes: GraphNode[] = participants.map((p) => {
     const group = groups?.find((g) => g.participantIds.includes(p.id));
+    const scores = culturalDataMap?.get(p.countryCode);
     return {
       id: p.id,
       name: p.name,
@@ -84,6 +88,7 @@ export function transformDistanceMatrixToGraph(
       countryCode: p.countryCode,
       groupId: group?.id,
       groupNumber: group?.groupNumber,
+      culturalScores: scores,
     };
   });
 
