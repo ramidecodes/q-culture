@@ -2,6 +2,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Header } from "@/components/header";
+import { CookieBanner } from "@/components/cookie-banner";
 import { ThemeProvider } from "@/components/theme-provider";
 
 export const metadata: Metadata = {
@@ -96,6 +97,7 @@ export default function RootLayout({
           >
             <Header />
             {children}
+            <CookieBanner />
           </ThemeProvider>
         </ClerkProvider>
       </body>
