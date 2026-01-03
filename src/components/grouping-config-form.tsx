@@ -18,9 +18,9 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import {
   saveGroupingConfig,
-  type Framework,
   type GroupSize,
 } from "@/lib/actions/grouping-actions";
+import type { Framework } from "@/types/cultural";
 
 const configSchema = z.object({
   framework: z.enum(["lewis", "hall", "hofstede", "combined"]),

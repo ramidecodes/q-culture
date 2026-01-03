@@ -1,32 +1,17 @@
 "use client";
 
-import { useRef, useEffect, useMemo, useCallback, useState } from "react";
-import dynamic from "next/dynamic";
-import type {
-  ForceGraphMethods,
-  NodeObject,
-  LinkObject,
-} from "react-force-graph-2d";
-
-// Dynamic import with ssr: false for browser-only APIs
-const ForceGraph2D = dynamic(
-  () => import("react-force-graph-2d").then((mod) => mod.default),
-  { ssr: false }
-);
+import { useRef, useEffect, useMemo } from "react";
+import type cytoscape from "cytoscape";
 
 type HeroNode = {
   id: string;
   name: string;
   country: string;
-  x?: number;
-  y?: number;
-  vx?: number;
-  vy?: number;
 };
 
 type HeroLink = {
-  source: string | HeroNode;
-  target: string | HeroNode;
+  source: string;
+  target: string;
   distance: number;
 };
 
@@ -76,9 +61,9 @@ function generateDummyData() {
 }
 
 export function HeroNetworkGraph({ className }: HeroNetworkGraphProps) {
-  const graphRef = useRef<ForceGraphMethods | undefined>(undefined);
+  const cyRef = useRef<cytoscape.Core | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [dimensions, setDimensions] = useState({ width: 1200, height: 800 });
+  const layoutRef = useRef<cytoscape.Layouts | null>(null);
 
   const graphData = useMemo(() => generateDummyData(), []);
 
@@ -101,76 +86,206 @@ export function HeroNetworkGraph({ className }: HeroNetworkGraphProps) {
     []
   );
 
-  // Get node color based on index
-  const getNodeColor = useCallback(
-    (node: NodeObject): string => {
-      const nodeId = String(node.id ?? "");
-      const nodeIndex = graphData.nodes.findIndex((n) => n.id === nodeId);
-      return nodeColors[nodeIndex % nodeColors.length] ?? "#6b7280";
-    },
-    [graphData.nodes, nodeColors]
-  );
+  // Transform to Cytoscape format
+  const cytoscapeElements = useMemo(() => {
+    const nodes = graphData.nodes.map((node, index) => ({
+      data: {
+        id: node.id,
+        label: "",
+        color: nodeColors[index % nodeColors.length] ?? "#6b7280",
+      },
+    }));
 
-  // Get edge color based on distance (inverse - closer = more opaque)
-  const getEdgeColor = useCallback((link: LinkObject): string => {
-    const linkDistance = (link as HeroLink).distance ?? 0.5;
-    const inverseNormalized = 1 - linkDistance;
-    const opacity = Math.max(
-      0.15,
-      Math.min(0.4, 0.2 + inverseNormalized * 0.2)
-    );
-    return `rgba(148, 163, 184, ${opacity})`; // Slate gray with opacity
+    const edges = graphData.links.map((link) => {
+      const distance = link.distance ?? 0.5;
+      const inverseNormalized = 1 - distance;
+      // Use quadratic curve for more pronounced similarity differences
+      const similarityFactor = inverseNormalized * inverseNormalized;
+      const opacity = Math.max(
+        0.2,
+        Math.min(0.6, 0.2 + similarityFactor * 0.4)
+      );
+      // Thinner edges: 0.3 to 1.0 pixels
+      const width = 0.3 + similarityFactor * 0.7;
+
+      return {
+        data: {
+          id: `${link.source}-${link.target}`,
+          source: link.source,
+          target: link.target,
+          distance,
+          width,
+          color: `rgba(148, 163, 184, ${opacity})`,
+          opacity,
+        },
+      };
+    });
+
+    return [...nodes, ...edges];
+  }, [graphData, nodeColors]);
+
+  // Stylesheet
+  const stylesheet = useMemo((): Array<{
+    selector: string;
+    style: Record<string, unknown>;
+  }> => {
+    return [
+      {
+        selector: "node",
+        style: {
+          shape: "ellipse",
+          "background-color": "data(color)",
+          width: 3,
+          height: 3,
+          "border-width": 0,
+          "border-color": "transparent",
+          "overlay-opacity": 0,
+          "overlay-color": "transparent",
+          "outline-width": 0,
+          "outline-color": "transparent",
+          "text-background-opacity": 0,
+          "text-background-color": "transparent",
+          "text-border-width": 0,
+          "text-border-color": "transparent",
+          "text-border-opacity": 0,
+          "text-outline-width": 0,
+          "text-outline-color": "transparent",
+          "text-outline-opacity": 0,
+        },
+      },
+      {
+        selector: "edge",
+        style: {
+          width: "data(width)",
+          "line-color": "data(color)",
+          opacity: "data(opacity)",
+          "curve-style": "bezier",
+          "line-style": "solid",
+        },
+      },
+    ];
   }, []);
 
-  // Get edge width based on distance (inverse)
-  const getEdgeWidth = useCallback((link: LinkObject): number => {
-    const linkDistance = (link as HeroLink).distance ?? 0.5;
-    const inverseNormalized = 1 - linkDistance;
-    return Math.max(0.5, Math.min(2, 0.5 + inverseNormalized * 1.5));
+  // Layout configuration
+  const layoutOptions = useMemo((): cytoscape.LayoutOptions => {
+    return {
+      name: "cose",
+      animate: true,
+      animationDuration: 300,
+      fit: false,
+      padding: 80,
+      nodeRepulsion: 5000,
+      idealEdgeLength: (edge: cytoscape.EdgeSingular) => {
+        const distance = edge.data("distance") ?? 0.5;
+        return Math.max(80, distance * 200);
+      },
+      edgeElasticity: 100,
+      gravity: 0.05,
+      componentSpacing: 100,
+      numIter: 600,
+      randomize: true,
+    };
   }, []);
 
-  // Custom node rendering
-  const renderNode = useCallback(
-    (node: NodeObject, ctx: CanvasRenderingContext2D, globalScale: number) => {
-      const nodeSize = 4;
-      const nodeColor = getNodeColor(node);
-
-      // Draw node circle
-      ctx.beginPath();
-      ctx.arc(node.x ?? 0, node.y ?? 0, nodeSize, 0, 2 * Math.PI);
-      ctx.fillStyle = nodeColor;
-      ctx.fill();
-      ctx.strokeStyle = "rgba(255, 255, 255, 0.3)";
-      ctx.lineWidth = 1 / globalScale;
-      ctx.stroke();
-    },
-    [getNodeColor]
-  );
-
-  // Track container dimensions
+  // Initialize Cytoscape instance (only once)
   useEffect(() => {
     const container = containerRef.current;
-    if (!container) return;
+    if (!container || cyRef.current) {
+      return;
+    }
 
-    const observer = new ResizeObserver((entries) => {
-      const { width, height } = entries[0].contentRect;
-      setDimensions({ width, height });
+    // Dynamically import and initialize Cytoscape
+    import("cytoscape").then((cytoscapeModule) => {
+      if (!container || cyRef.current) {
+        return;
+      }
+
+      const cytoscape = cytoscapeModule.default;
+
+      // Initialize with empty elements - will be populated by update effect
+      const cy = cytoscape({
+        container,
+        elements: [],
+        style: stylesheet,
+        userPanningEnabled: false,
+        userZoomingEnabled: false,
+        minZoom: 0.1,
+        maxZoom: 2,
+      });
+
+      cyRef.current = cy;
+    });
+
+    return () => {
+      if (layoutRef.current) {
+        layoutRef.current.stop();
+        layoutRef.current = null;
+      }
+      if (cyRef.current) {
+        cyRef.current.destroy();
+        cyRef.current = null;
+      }
+    };
+  }, [stylesheet]);
+
+  // Update elements when data changes
+  useEffect(() => {
+    const cy = cyRef.current;
+    if (!cy) {
+      return;
+    }
+
+    // Stop previous layout if exists
+    if (layoutRef.current) {
+      layoutRef.current.stop();
+      layoutRef.current = null;
+    }
+
+    // Remove all existing elements
+    cy.elements().remove();
+
+    // Apply stylesheet first
+    cy.style(stylesheet);
+
+    // Add new elements
+    cy.add([...cytoscapeElements]);
+
+    // Force style update to ensure all styles are applied
+    cy.style().update();
+
+    // Run layout and fit after completion
+    const layout = cy.layout(layoutOptions);
+    layoutRef.current = layout;
+
+    const handleLayoutStop = () => {
+      cy.fit(undefined, 80);
+    };
+
+    layout.one("layoutstop", handleLayoutStop);
+    layout.run();
+
+    return () => {
+      layout.off("layoutstop", handleLayoutStop);
+      layout.stop();
+    };
+  }, [cytoscapeElements, stylesheet, layoutOptions]);
+
+  // Track container dimensions and resize Cytoscape
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) {
+      return;
+    }
+
+    const observer = new ResizeObserver(() => {
+      // Resize cytoscape instance when container size changes
+      if (cyRef.current) {
+        cyRef.current.resize();
+      }
     });
 
     observer.observe(container);
     return () => observer.disconnect();
-  }, []);
-
-  // Initialize graph and fit to view
-  useEffect(() => {
-    if (graphRef.current) {
-      // Set up forces for aesthetic layout
-      graphRef.current.d3Force("charge")?.strength(-300);
-      // Fit graph to view after initial render
-      setTimeout(() => {
-        graphRef.current?.zoomToFit(400, 20);
-      }, 500);
-    }
   }, []);
 
   return (
@@ -183,50 +298,11 @@ export function HeroNetworkGraph({ className }: HeroNetworkGraphProps) {
         position: "absolute",
         inset: 0,
         pointerEvents: "none",
+        border: "none",
+        background: "transparent",
+        padding: 0,
+        margin: 0,
       }}
-    >
-      <ForceGraph2D
-        ref={graphRef}
-        graphData={graphData}
-        width={dimensions.width}
-        height={dimensions.height}
-        nodeColor={getNodeColor}
-        nodeVal={1}
-        nodeRelSize={4}
-        nodeCanvasObject={renderNode}
-        nodeCanvasObjectMode={() => "replace"}
-        linkColor={getEdgeColor}
-        linkWidth={getEdgeWidth}
-        linkDirectionalArrowLength={0}
-        d3AlphaDecay={0.02}
-        d3VelocityDecay={0.3}
-        // @ts-expect-error - d3Force is valid but types may be outdated
-        d3Force={(
-          forceName: string,
-          force: {
-            distance: (fn: (link: LinkObject & HeroLink) => number) => void;
-          }
-        ) => {
-          if (forceName === "link") {
-            force.distance((link: LinkObject & HeroLink) => {
-              const distance = link.distance ?? 0.5;
-              return Math.max(50, distance * 200);
-            });
-          }
-        }}
-        cooldownTicks={100}
-        onEngineStop={() => {
-          graphRef.current?.zoomToFit(400, 20);
-        }}
-        backgroundColor="transparent"
-        enableNodeDrag={false}
-        enableZoomInteraction={false}
-        enablePanInteraction={false}
-        onNodeClick={undefined}
-        onNodeHover={undefined}
-        onLinkClick={undefined}
-        onBackgroundClick={undefined}
-      />
-    </div>
+    />
   );
 }
