@@ -44,7 +44,7 @@ type TooltipPayload = {
 
 type TooltipProps = {
   active?: boolean;
-  payload?: TooltipPayload[];
+  payload?: ReadonlyArray<TooltipPayload>;
 };
 
 // Dimension labels for each framework
@@ -347,9 +347,14 @@ export function CulturalProfileRadar({
         return null;
       }
 
+      const firstPayload = payload[0];
+      if (!firstPayload?.payload) {
+        return null;
+      }
+
       return (
         <div className="rounded-lg border bg-background p-3 shadow-md">
-          <p className="font-semibold mb-2">{payload[0].payload.label}</p>
+          <p className="font-semibold mb-2">{firstPayload.payload.label}</p>
           {payload.map((entry) => {
             const country = countries.find((c) => c.key === entry.dataKey);
             return (

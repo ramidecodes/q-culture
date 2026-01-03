@@ -103,12 +103,12 @@ type ParameterOption = {
 // Recharts tooltip types
 type TooltipProps = {
   active?: boolean;
-  payload?: Array<{
-    dataKey: string;
-    value: number;
-    payload: BarDataPoint;
+  payload?: ReadonlyArray<{
+    dataKey?: string;
+    value?: number;
+    payload?: BarDataPoint;
   }>;
-  label?: string;
+  label?: string | number;
 };
 
 export function CountryParameterBarChart({
@@ -190,12 +190,21 @@ export function CountryParameterBarChart({
   }, [data.nodes]);
 
   // Parse selected parameter (handle combined framework format)
-  const parsedParameter = useMemo(() => {
+  const parsedParameter = useMemo<{
+    framework: Exclude<Framework, "combined">;
+    parameter: string;
+  }>(() => {
     if (framework === "combined" && selectedParameter.includes(".")) {
       const [fw, param] = selectedParameter.split(".");
-      return { framework: fw as Framework, parameter: param };
+      return {
+        framework: fw as Exclude<Framework, "combined">,
+        parameter: param,
+      };
     }
-    return { framework, parameter: selectedParameter };
+    return {
+      framework: framework as Exclude<Framework, "combined">,
+      parameter: selectedParameter,
+    };
   }, [framework, selectedParameter]);
 
   // Transform data for Recharts
@@ -261,7 +270,10 @@ export function CountryParameterBarChart({
         return null;
       }
 
-      const data = payload[0].payload as BarDataPoint;
+      const data = payload[0]?.payload as BarDataPoint | undefined;
+      if (!data) {
+        return null;
+      }
       return (
         <div className="rounded-lg border bg-background p-3 shadow-md">
           <p className="font-semibold mb-2">{data.country}</p>
