@@ -300,7 +300,13 @@ function generateGroupsWithGA(
     while (newPopulation.length < config.populationSize) {
       const parent1 = tournamentSelection(population, rng);
       const parent2 = tournamentSelection(population, rng);
-      const offspring = crossover(parent1, parent2, participants, groupSize, rng);
+      const offspring = crossover(
+        parent1,
+        parent2,
+        participants,
+        groupSize,
+        rng
+      );
       const mutated = mutate(offspring, config.mutationRate, groupSize, rng);
       newPopulation.push(mutated);
     }
@@ -460,9 +466,7 @@ function crossover(
   rng: SeededRNG
 ): Chromosome {
   // Use parent1 as base, then swap some participants from parent2
-  const allParticipants = new Set(
-    participants.map((p) => p.id)
-  );
+  const allParticipants = new Set(participants.map((p) => p.id));
   const childGroups: Group[] = parent1.groups.map((g) => ({
     participants: [...g.participants],
   }));
@@ -615,7 +619,9 @@ function validateAndFixGroups(
   }));
 
   // Add missing participants
-  const missing = Array.from(allParticipantIds).filter((id) => !assigned.has(id));
+  const missing = Array.from(allParticipantIds).filter(
+    (id) => !assigned.has(id)
+  );
   for (const participant of missing) {
     if (validGroups.length === 0) {
       validGroups.push({ participants: [] });
@@ -670,8 +676,8 @@ function createSeededRNG(seed: string): SeededRNG {
   // Simple LCG (Linear Congruential Generator)
   let state = hashString(seed);
   return () => {
-    state = (state * 1664525 + 1013904223) % Math.pow(2, 32);
-    return state / Math.pow(2, 32);
+    state = (state * 1664525 + 1013904223) % 2 ** 32;
+    return state / 2 ** 32;
   };
 }
 
@@ -682,7 +688,7 @@ function hashString(str: string): number {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
     const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
+    hash = (hash << 5) - hash + char;
     hash = hash & hash; // Convert to 32-bit integer
   }
   return Math.abs(hash);

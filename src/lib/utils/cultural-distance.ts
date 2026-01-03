@@ -159,9 +159,7 @@ function computeCombinedDistance(
   }
 
   // Normalize each distance to [0,1] range before averaging
-  const normalizedDistances = distances.map(
-    (d) => d.distance / d.maxDist
-  );
+  const normalizedDistances = distances.map((d) => d.distance / d.maxDist);
 
   // Average the normalized distances (equal weighting)
   return (

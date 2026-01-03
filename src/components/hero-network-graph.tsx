@@ -2,7 +2,11 @@
 
 import { useRef, useEffect, useMemo, useCallback, useState } from "react";
 import dynamic from "next/dynamic";
-import type { ForceGraphMethods, NodeObject, LinkObject } from "react-force-graph-2d";
+import type {
+  ForceGraphMethods,
+  NodeObject,
+  LinkObject,
+} from "react-force-graph-2d";
 
 // Dynamic import with ssr: false for browser-only APIs
 const ForceGraph2D = dynamic(
@@ -111,7 +115,10 @@ export function HeroNetworkGraph({ className }: HeroNetworkGraphProps) {
   const getEdgeColor = useCallback((link: LinkObject): string => {
     const linkDistance = (link as HeroLink).distance ?? 0.5;
     const inverseNormalized = 1 - linkDistance;
-    const opacity = Math.max(0.15, Math.min(0.4, 0.2 + inverseNormalized * 0.2));
+    const opacity = Math.max(
+      0.15,
+      Math.min(0.4, 0.2 + inverseNormalized * 0.2)
+    );
     return `rgba(148, 163, 184, ${opacity})`; // Slate gray with opacity
   }, []);
 

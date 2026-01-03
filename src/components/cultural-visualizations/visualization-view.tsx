@@ -11,8 +11,10 @@ import {
 } from "@/components/ui/select";
 import { NetworkGraph } from "./network-graph";
 import { DistanceMatrixHeatmap } from "./distance-matrix-heatmap";
+import { CulturalProfileRadar } from "./cultural-profile-radar";
 import type { Framework } from "@/types/cultural";
 import type { VisualizationData } from "@/lib/db/queries/visualization-queries";
+import type { GraphData } from "@/lib/utils/visualization-data";
 import useSWR from "swr";
 import { Info } from "lucide-react";
 
@@ -123,6 +125,7 @@ export function VisualizationView({
         <TabsList>
           <TabsTrigger value="network">Network Graph</TabsTrigger>
           <TabsTrigger value="heatmap">Distance Matrix</TabsTrigger>
+          <TabsTrigger value="radar">Cultural Profile</TabsTrigger>
         </TabsList>
         <TabsContent value="network" className="mt-4">
           <div className="rounded-lg border bg-background p-4">
@@ -151,6 +154,21 @@ export function VisualizationView({
             <p>
               Each cell shows the cultural distance between two participants.
               Darker colors indicate greater distances.
+            </p>
+          </div>
+        </TabsContent>
+        <TabsContent value="radar" className="mt-4">
+          <div className="rounded-lg border bg-background p-4">
+            <CulturalProfileRadar
+              data={visualizationData.graphData as GraphData}
+              framework={framework}
+            />
+          </div>
+          <div className="mt-4 text-sm text-muted-foreground">
+            <p>
+              Each polygon represents a country's cultural profile across the
+              selected framework dimensions. Countries in the same group are
+              overlaid for comparison.
             </p>
           </div>
         </TabsContent>
