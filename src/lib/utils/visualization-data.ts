@@ -3,9 +3,10 @@
  * Transforms distance matrices into formats suitable for visualization
  */
 
-import type { Framework } from "@/types/cultural";
+import type { Framework, CulturalScores } from "@/types/cultural";
 import { generateDistanceMatrix } from "./distance-matrix";
 import { getCulturalDataForCountries } from "@/lib/db/queries/country-queries";
+import { computeDimensionalDistances } from "./cultural-distance";
 
 export type Participant = {
   id: string;
@@ -29,10 +30,17 @@ export type GraphNode = {
   groupNumber?: number;
 };
 
+export type DimensionalDistance = {
+  dimension: string;
+  label: string;
+  distance: number; // normalized 0-1
+};
+
 export type GraphLink = {
   source: string;
   target: string;
   distance: number;
+  dimensionalDistances?: DimensionalDistance[]; // New field
 };
 
 export type GraphData = {
@@ -63,7 +71,9 @@ export type HeatmapData = {
 export function transformDistanceMatrixToGraph(
   participants: Participant[],
   distanceMatrix: Map<string, Map<string, number>>,
-  groups?: Group[]
+  groups?: Group[],
+  framework?: Framework,
+  culturalDataMap?: Map<string, CulturalScores>
 ): GraphData {
   const nodes: GraphNode[] = participants.map((p) => {
     const group = groups?.find((g) => g.participantIds.includes(p.id));
@@ -83,10 +93,41 @@ export function transformDistanceMatrixToGraph(
     for (const [targetId, distance] of distances.entries()) {
       // Only include one direction (avoid duplicate edges)
       if (sourceId < targetId) {
+        const sourceParticipant = participants.find((p) => p.id === sourceId);
+        const targetParticipant = participants.find((p) => p.id === targetId);
+
+        // Compute dimensional distances if framework and cultural data are available
+        let dimensionalDistances: DimensionalDistance[] | undefined;
+        if (
+          framework &&
+          culturalDataMap &&
+          sourceParticipant &&
+          targetParticipant
+        ) {
+          const scores1 = culturalDataMap.get(sourceParticipant.countryCode);
+          const scores2 = culturalDataMap.get(targetParticipant.countryCode);
+          if (scores1 && scores2) {
+            try {
+              dimensionalDistances = computeDimensionalDistances(
+                scores1,
+                scores2,
+                framework
+              );
+            } catch (error) {
+              // If dimensional computation fails, just omit it
+              console.warn(
+                "Failed to compute dimensional distances:",
+                error
+              );
+            }
+          }
+        }
+
         links.push({
           source: sourceId,
           target: targetId,
           distance,
+          dimensionalDistances,
         });
       }
     }

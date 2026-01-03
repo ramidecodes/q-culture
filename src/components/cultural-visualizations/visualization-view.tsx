@@ -130,6 +130,7 @@ export function VisualizationView({
               data={visualizationData.graphData}
               selectedNodeId={selectedNodeId}
               onNodeClick={handleNodeClick}
+              framework={visualizationData.framework}
             />
           </div>
           <div className="mt-4 text-sm text-muted-foreground">

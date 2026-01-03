@@ -20,6 +20,7 @@ import type {
   HofstedeScores,
   CulturalScores,
 } from "@/types/cultural";
+import type { DimensionalDistance } from "./visualization-data";
 
 /**
  * Computes cultural distance between two sets of cultural scores
@@ -143,4 +144,182 @@ function euclideanDistance(dimensions: number[]): number {
     0
   );
   return Math.sqrt(sumSquaredDiffs);
+}
+
+/**
+ * Computes per-dimension distances between two sets of cultural scores.
+ * Returns normalized distances (0-1) for each dimension in the framework.
+ */
+export function computeDimensionalDistances(
+  scores1: CulturalScores,
+  scores2: CulturalScores,
+  framework: Framework
+): DimensionalDistance[] {
+  switch (framework) {
+    case "lewis":
+      return computeLewisDimensionalDistances(scores1.lewis, scores2.lewis);
+    case "hall":
+      return computeHallDimensionalDistances(scores1.hall, scores2.hall);
+    case "hofstede":
+      return computeHofstedeDimensionalDistances(
+        scores1.hofstede,
+        scores2.hofstede
+      );
+    case "combined":
+      return computeCombinedDimensionalDistances(scores1, scores2);
+    default:
+      throw new Error(`Unknown framework: ${framework}`);
+  }
+}
+
+/**
+ * Computes per-dimension distances for Lewis framework
+ */
+function computeLewisDimensionalDistances(
+  scores1?: LewisScores,
+  scores2?: LewisScores
+): DimensionalDistance[] {
+  if (!scores1 || !scores2) {
+    throw new Error("Missing Lewis scores");
+  }
+
+  // Normalize by max possible difference (100 for percentage-based scores)
+  const maxDiff = 100;
+
+  return [
+    {
+      dimension: "linearActive",
+      label: "Linear Active",
+      distance: Math.abs(scores1.linearActive - scores2.linearActive) / maxDiff,
+    },
+    {
+      dimension: "multiActive",
+      label: "Multi Active",
+      distance: Math.abs(scores1.multiActive - scores2.multiActive) / maxDiff,
+    },
+    {
+      dimension: "reactive",
+      label: "Reactive",
+      distance: Math.abs(scores1.reactive - scores2.reactive) / maxDiff,
+    },
+  ];
+}
+
+/**
+ * Computes per-dimension distances for Hall framework
+ */
+function computeHallDimensionalDistances(
+  scores1?: HallScores,
+  scores2?: HallScores
+): DimensionalDistance[] {
+  if (!scores1 || !scores2) {
+    throw new Error("Missing Hall scores");
+  }
+
+  // Normalize by max possible difference (100 for percentage-based scores)
+  const maxDiff = 100;
+
+  return [
+    {
+      dimension: "contextHigh",
+      label: "Context (High)",
+      distance: Math.abs(scores1.contextHigh - scores2.contextHigh) / maxDiff,
+    },
+    {
+      dimension: "timePolychronic",
+      label: "Time (Polychronic)",
+      distance:
+        Math.abs(scores1.timePolychronic - scores2.timePolychronic) / maxDiff,
+    },
+    {
+      dimension: "spacePrivate",
+      label: "Space (Private)",
+      distance: Math.abs(scores1.spacePrivate - scores2.spacePrivate) / maxDiff,
+    },
+  ];
+}
+
+/**
+ * Computes per-dimension distances for Hofstede framework
+ */
+function computeHofstedeDimensionalDistances(
+  scores1?: HofstedeScores,
+  scores2?: HofstedeScores
+): DimensionalDistance[] {
+  if (!scores1 || !scores2) {
+    throw new Error("Missing Hofstede scores");
+  }
+
+  // Normalize by max possible difference (100 for Hofstede scores)
+  const maxDiff = 100;
+
+  return [
+    {
+      dimension: "powerDistance",
+      label: "Power Distance",
+      distance:
+        Math.abs(scores1.powerDistance - scores2.powerDistance) / maxDiff,
+    },
+    {
+      dimension: "individualism",
+      label: "Individualism",
+      distance:
+        Math.abs(scores1.individualism - scores2.individualism) / maxDiff,
+    },
+    {
+      dimension: "masculinity",
+      label: "Masculinity",
+      distance: Math.abs(scores1.masculinity - scores2.masculinity) / maxDiff,
+    },
+    {
+      dimension: "uncertaintyAvoidance",
+      label: "Uncertainty Avoidance",
+      distance:
+        Math.abs(
+          scores1.uncertaintyAvoidance - scores2.uncertaintyAvoidance
+        ) / maxDiff,
+    },
+    {
+      dimension: "longTermOrientation",
+      label: "Long-term Orientation",
+      distance:
+        Math.abs(
+          scores1.longTermOrientation - scores2.longTermOrientation
+        ) / maxDiff,
+    },
+    {
+      dimension: "indulgence",
+      label: "Indulgence",
+      distance: Math.abs(scores1.indulgence - scores2.indulgence) / maxDiff,
+    },
+  ];
+}
+
+/**
+ * Computes per-dimension distances for combined framework
+ * Returns all dimensions from all available frameworks
+ */
+function computeCombinedDimensionalDistances(
+  scores1: CulturalScores,
+  scores2: CulturalScores
+): DimensionalDistance[] {
+  const dimensions: DimensionalDistance[] = [];
+
+  if (scores1.lewis && scores2.lewis) {
+    dimensions.push(...computeLewisDimensionalDistances(scores1.lewis, scores2.lewis));
+  }
+  if (scores1.hall && scores2.hall) {
+    dimensions.push(...computeHallDimensionalDistances(scores1.hall, scores2.hall));
+  }
+  if (scores1.hofstede && scores2.hofstede) {
+    dimensions.push(
+      ...computeHofstedeDimensionalDistances(scores1.hofstede, scores2.hofstede)
+    );
+  }
+
+  if (dimensions.length === 0) {
+    throw new Error("No cultural scores available for combined calculation");
+  }
+
+  return dimensions;
 }

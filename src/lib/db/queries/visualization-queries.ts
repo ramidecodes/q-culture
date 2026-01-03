@@ -190,7 +190,9 @@ export async function getVisualizationData(
   const graphData = transformDistanceMatrixToGraph(
     participantsData,
     distanceMatrix,
-    groupsData
+    groupsData,
+    selectedFramework,
+    culturalDataMap
   );
 
   const heatmapData = transformDistanceMatrixToHeatmap(

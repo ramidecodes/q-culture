@@ -12,7 +12,10 @@ import type {
   GraphNode,
   GraphLink,
 } from "@/lib/utils/visualization-data";
+import type { Framework } from "@/types/cultural";
 import { cn } from "@/lib/utils";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 // Dynamic import with ssr: false is necessary because react-force-graph-2d
 // uses browser-only APIs (Canvas, D3) that don't exist during server-side rendering.
@@ -59,6 +62,7 @@ type NetworkGraphProps = {
   onNodeClick?: (node: GraphNode) => void;
   onNodeHover?: (node: GraphNode | null) => void;
   className?: string;
+  framework?: Framework;
 };
 
 export function NetworkGraph({
@@ -67,17 +71,154 @@ export function NetworkGraph({
   onNodeClick,
   onNodeHover,
   className,
+  framework,
 }: NetworkGraphProps) {
   const graphRef = useRef<ForceGraphMethods | undefined>(undefined);
   const containerRef = useRef<HTMLDivElement>(null);
   const [hoveredNode, setHoveredNode] = useState<GraphNode | null>(null);
   const [dimensions, setDimensions] = useState({ width: 800, height: 450 });
+  const [edgeMode, setEdgeMode] = useState<"aggregate" | "dimensional">(
+    "aggregate"
+  );
 
   // Pre-compute max distance for normalization
   const maxDistance = useMemo(
     () => Math.max(...data.links.map((l) => l.distance), 1),
     [data.links]
   );
+
+  // Dimension color mapping
+  const getDimensionColor = useCallback(
+    (dimension: string, framework?: Framework): string => {
+      // Hofstede dimensions
+      if (framework === "hofstede") {
+        const hofstedeColors: Record<string, string> = {
+          powerDistance: "#e6194b", // Red
+          individualism: "#3cb44b", // Green
+          masculinity: "#ffe119", // Yellow
+          uncertaintyAvoidance: "#4363d8", // Blue
+          longTermOrientation: "#f58231", // Orange
+          indulgence: "#911eb4", // Purple
+        };
+        return hofstedeColors[dimension] ?? "#808080";
+      }
+
+      // Lewis dimensions
+      if (framework === "lewis") {
+        const lewisColors: Record<string, string> = {
+          linearActive: "#3cb44b", // Green
+          multiActive: "#f58231", // Orange
+          reactive: "#4363d8", // Blue
+        };
+        return lewisColors[dimension] ?? "#808080";
+      }
+
+      // Hall dimensions
+      if (framework === "hall") {
+        const hallColors: Record<string, string> = {
+          contextHigh: "#e6194b", // Red
+          timePolychronic: "#3cb44b", // Green
+          spacePrivate: "#4363d8", // Blue
+        };
+        return hallColors[dimension] ?? "#808080";
+      }
+
+      // Combined framework - use a cycling palette
+      if (framework === "combined") {
+        const combinedPalette = [
+          "#e6194b", // Red
+          "#3cb44b", // Green
+          "#ffe119", // Yellow
+          "#4363d8", // Blue
+          "#f58231", // Orange
+          "#911eb4", // Purple
+          "#46f0f0", // Cyan
+          "#f032e6", // Magenta
+        ];
+        // Use a hash-like approach to assign consistent colors
+        let hash = 0;
+        for (let i = 0; i < dimension.length; i++) {
+          hash = dimension.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        return combinedPalette[Math.abs(hash) % combinedPalette.length];
+      }
+
+      return "#808080"; // Gray fallback
+    },
+    []
+  );
+
+  // Transform graph data based on edge mode
+  const transformedGraphData = useMemo(() => {
+    if (edgeMode === "aggregate" || !framework) {
+      return data;
+    }
+
+    // In dimensional mode, expand each link into multiple links (one per dimension)
+    const expandedLinks: GraphLink[] = [];
+
+    for (const link of data.links) {
+      const dimDists = link.dimensionalDistances;
+      if (dimDists && dimDists.length > 0) {
+        // Create one link per dimension
+        dimDists.forEach((dimDist, index) => {
+          // Calculate curvature offset to fan out edges
+          // Spread from -0.3 to 0.3 based on index
+          const totalDims = dimDists.length;
+          const curvatureOffset =
+            totalDims > 1 ? -0.3 + (index / (totalDims - 1)) * 0.6 : 0;
+
+          expandedLinks.push({
+            source: link.source,
+            target: link.target,
+            distance: dimDist.distance,
+            // Store dimension info in the link for rendering
+            dimension: dimDist.dimension,
+            dimensionLabel: dimDist.label,
+            curvature: curvatureOffset,
+          } as GraphLink & {
+            dimension: string;
+            dimensionLabel: string;
+            curvature: number;
+          });
+        });
+      } else {
+        // If no dimensional data, keep the original link
+        expandedLinks.push(link);
+      }
+    }
+
+    return {
+      nodes: data.nodes,
+      links: expandedLinks,
+    };
+  }, [data, edgeMode, framework]);
+
+  // Get all unique dimensions for legend
+  const dimensionLegend = useMemo(() => {
+    if (edgeMode !== "dimensional" || !framework) {
+      return [];
+    }
+
+    const dimensions = new Map<string, string>();
+    for (const link of data.links) {
+      if (link.dimensionalDistances) {
+        for (const dimDist of link.dimensionalDistances) {
+          if (!dimensions.has(dimDist.dimension)) {
+            dimensions.set(dimDist.dimension, dimDist.label);
+          }
+        }
+      }
+    }
+
+    return Array.from(dimensions.entries())
+      .map(([dim, label]) => ({
+        dimension: dim,
+        label,
+        color: getDimensionColor(dim, framework),
+      }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+  }, [data.links, edgeMode, framework, getDimensionColor]);
 
   // Distinct color palette for countries
   const countryColorPalette = useMemo(
@@ -190,8 +331,36 @@ export function NetworkGraph({
   // Edge color based on distance (inverse) - darker/thicker for SMALLER distances (stronger similarity)
   const getEdgeColor = useCallback(
     (link: LibraryLink): string => {
-      const linkDistance =
-        (link as LibraryLink & Partial<GraphLink>).distance ?? 0;
+      const graphLink = link as LibraryLink &
+        Partial<GraphLink> & {
+          dimension?: string;
+          dimensionLabel?: string;
+        };
+
+      // In dimensional mode, use dimension color
+      if (edgeMode === "dimensional" && graphLink.dimension && framework) {
+        const dimensionColor = getDimensionColor(
+          graphLink.dimension,
+          framework
+        );
+        const linkDistance = graphLink.distance ?? 0;
+        // Normalize dimensional distance (already 0-1)
+        const normalized = linkDistance;
+        const inverseNormalized = 1 - normalized;
+        // Strong connections (close) = more opaque
+        const opacity = Math.max(
+          0.3,
+          Math.min(0.9, 0.4 + inverseNormalized * 0.5)
+        );
+        // Convert hex to rgba
+        const r = parseInt(dimensionColor.slice(1, 3), 16);
+        const g = parseInt(dimensionColor.slice(3, 5), 16);
+        const b = parseInt(dimensionColor.slice(5, 7), 16);
+        return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+      }
+
+      // Aggregate mode: gray scale based on distance
+      const linkDistance = graphLink.distance ?? 0;
       // Invert: close distance = high opacity, far distance = low opacity
       const normalized = linkDistance / maxDistance;
       const inverseNormalized = 1 - normalized;
@@ -203,21 +372,31 @@ export function NetworkGraph({
       const lightness = Math.max(20, 100 - inverseNormalized * 60);
       return `hsl(0, 0%, ${lightness}%, ${opacity})`;
     },
-    [maxDistance]
+    [maxDistance, edgeMode, framework, getDimensionColor]
   );
 
   // Edge width based on distance (inverse) - thicker for SMALLER distances (stronger similarity)
   const getEdgeWidth = useCallback(
     (link: LibraryLink): number => {
-      const linkDistance =
-        (link as LibraryLink & Partial<GraphLink>).distance ?? 0;
+      const graphLink = link as LibraryLink & Partial<GraphLink>;
+      const linkDistance = graphLink.distance ?? 0;
+
+      if (edgeMode === "dimensional") {
+        // In dimensional mode, use normalized distance (already 0-1)
+        const normalized = linkDistance;
+        const inverseNormalized = 1 - normalized;
+        // Thinner edges in dimensional mode to avoid overlap
+        return Math.max(0.5, Math.min(3, 0.5 + inverseNormalized * 2.5));
+      }
+
+      // Aggregate mode
       // Invert: close distance = thick, far distance = thin
       const normalized = linkDistance / maxDistance;
       const inverseNormalized = 1 - normalized;
       // Strong connections (close) = thicker edges
       return Math.max(0.5, Math.min(5, 1 + inverseNormalized * 4));
     },
-    [maxDistance]
+    [maxDistance, edgeMode]
   );
 
   const handleNodeClick = useCallback(
@@ -248,11 +427,22 @@ export function NetworkGraph({
     return `${n.name ?? ""} (${n.country ?? ""})`;
   }, []);
 
-  const getLinkLabel = useCallback((link: LibraryLink): string => {
-    const linkDistance =
-      (link as LibraryLink & Partial<GraphLink>).distance ?? 0;
-    return `Distance: ${linkDistance.toFixed(3)}`;
-  }, []);
+  const getLinkLabel = useCallback(
+    (link: LibraryLink): string => {
+      const graphLink = link as LibraryLink &
+        Partial<GraphLink> & {
+          dimensionLabel?: string;
+        };
+      const linkDistance = graphLink.distance ?? 0;
+
+      if (edgeMode === "dimensional" && graphLink.dimensionLabel) {
+        return `${graphLink.dimensionLabel}: ${linkDistance.toFixed(3)}`;
+      }
+
+      return `Distance: ${linkDistance.toFixed(3)}`;
+    },
+    [edgeMode]
+  );
 
   const handleEngineStop = useCallback(() => {
     graphRef.current?.zoomToFit(400);
@@ -305,6 +495,47 @@ export function NetworkGraph({
 
   return (
     <div className={cn("w-full space-y-4", className)}>
+      {/* Edge Mode Toggle */}
+      {framework && (
+        <div className="flex items-center gap-3 p-3 rounded-lg border bg-muted/30">
+          <div className="flex items-center gap-2">
+            <Label htmlFor="edge-mode-toggle" className="text-sm font-medium">
+              Edge Display:
+            </Label>
+            <div className="flex items-center gap-2">
+              <span
+                className={cn(
+                  "text-xs",
+                  edgeMode === "aggregate"
+                    ? "font-semibold"
+                    : "text-muted-foreground"
+                )}
+              >
+                Aggregate
+              </span>
+              <Switch
+                id="edge-mode-toggle"
+                checked={edgeMode === "dimensional"}
+                onCheckedChange={(checked) => {
+                  setEdgeMode(checked ? "dimensional" : "aggregate");
+                }}
+                // @ts-expect-error - Radix UI types may not be fully available
+              />
+              <span
+                className={cn(
+                  "text-xs",
+                  edgeMode === "dimensional"
+                    ? "font-semibold"
+                    : "text-muted-foreground"
+                )}
+              >
+                Dimensional
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div
         ref={containerRef}
         className="relative w-full"
@@ -312,7 +543,7 @@ export function NetworkGraph({
       >
         <ForceGraph2D
           ref={graphRef}
-          graphData={data}
+          graphData={transformedGraphData}
           width={dimensions.width}
           height={dimensions.height}
           nodeLabel={getNodeLabel}
@@ -326,10 +557,19 @@ export function NetworkGraph({
           linkLabel={getLinkLabel}
           linkDirectionalArrowLength={0}
           linkDirectionalArrowRelPos={1}
-          linkCurvature={0.1}
+          linkCurvature={(link: LibraryLink) => {
+            const graphLink = link as LibraryLink &
+              Partial<GraphLink> & {
+                curvature?: number;
+              };
+            // Use custom curvature in dimensional mode, default in aggregate
+            return edgeMode === "dimensional" &&
+              graphLink.curvature !== undefined
+              ? graphLink.curvature
+              : 0.1;
+          }}
           d3AlphaDecay={0.02}
           d3VelocityDecay={0.3}
-          // biome-ignore lint/suspicious/noExplicitAny: d3Force types are incomplete
           // @ts-expect-error - d3Force is valid but types may be outdated
           d3Force={(
             forceName: string,
@@ -405,10 +645,27 @@ export function NetworkGraph({
               <span className="text-xs">Selected</span>
             </div>
           )}
+          {edgeMode === "dimensional" && dimensionLegend.length > 0 && (
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-muted-foreground">
+                Dimensions:
+              </span>
+              {dimensionLegend.map((dim) => (
+                <div key={dim.dimension} className="flex items-center gap-1">
+                  <div
+                    className="w-4 h-3 rounded border border-background"
+                    style={{ backgroundColor: dim.color }}
+                  />
+                  <span className="text-xs">{dim.label}</span>
+                </div>
+              ))}
+            </div>
+          )}
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <span>
-              Edge thickness and darkness indicate similarity (thicker = closer
-              culturally)
+              {edgeMode === "dimensional"
+                ? "Each edge color represents a dimension. Edge thickness indicates similarity for that dimension (thicker = closer)."
+                : "Edge thickness and darkness indicate similarity (thicker = closer culturally)"}
             </span>
           </div>
         </div>
