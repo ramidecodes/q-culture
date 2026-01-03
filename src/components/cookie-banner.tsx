@@ -37,9 +37,7 @@ export function CookieBanner() {
   }
 
   return (
-    <div
-      className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-lg animate-in slide-in-from-bottom duration-300"
-    >
+    <div className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 shadow-lg animate-in slide-in-from-bottom duration-300">
       <div className="container py-4">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex-1 space-y-1">

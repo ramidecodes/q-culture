@@ -8,8 +8,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-const baseUrl =
-  process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
 export function generateMetadata(): Metadata {
   return {
@@ -184,7 +183,9 @@ export default function TermsPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <p className="mb-4 text-muted-foreground">You agree not to:</p>
+                  <p className="mb-4 text-muted-foreground">
+                    You agree not to:
+                  </p>
                   <ul className="list-disc space-y-2 pl-6 text-muted-foreground">
                     <li>
                       Violate any applicable laws, regulations, or third-party
@@ -254,10 +255,10 @@ export default function TermsPage() {
                   <CardContent>
                     <p className="mb-4 text-muted-foreground">
                       You retain ownership of content you create within the
-                      Service, including workshops, participant data, reflections,
-                      and group assignments. However, by using the Service, you
-                      grant Quantifying Culture a worldwide, non-exclusive,
-                      royalty-free license to:
+                      Service, including workshops, participant data,
+                      reflections, and group assignments. However, by using the
+                      Service, you grant Quantifying Culture a worldwide,
+                      non-exclusive, royalty-free license to:
                     </p>
                     <ul className="list-disc space-y-2 pl-6 text-muted-foreground">
                       <li>
@@ -289,8 +290,8 @@ export default function TermsPage() {
                   <p className="text-muted-foreground">
                     Currently, Quantifying Culture is provided as a free
                     service. If we introduce paid features or subscriptions in
-                    the future, we will update these Terms and provide notice
-                    to users. Any future payment terms will be clearly disclosed
+                    the future, we will update these Terms and provide notice to
+                    users. Any future payment terms will be clearly disclosed
                     before you are charged.
                   </p>
                 </CardContent>
@@ -352,8 +353,8 @@ export default function TermsPage() {
                     <li>Personal injury or property damage</li>
                     <li>Loss of goodwill or reputation</li>
                     <li>
-                      Issues arising from cultural distance calculations or group
-                      assignments
+                      Issues arising from cultural distance calculations or
+                      group assignments
                     </li>
                   </ul>
                   <p className="mt-4 text-muted-foreground">
@@ -373,13 +374,13 @@ export default function TermsPage() {
               <Card>
                 <CardContent className="pt-6">
                   <p className="text-muted-foreground">
-                    You agree to indemnify, defend, and hold harmless Quantifying
-                    Culture and its officers, directors, employees, and agents
-                    from and against any claims, liabilities, damages, losses,
-                    and expenses, including reasonable attorneys' fees, arising
-                    out of or in any way connected with your use of the Service,
-                    your violation of these Terms, or your violation of any
-                    third-party rights.
+                    You agree to indemnify, defend, and hold harmless
+                    Quantifying Culture and its officers, directors, employees,
+                    and agents from and against any claims, liabilities,
+                    damages, losses, and expenses, including reasonable
+                    attorneys' fees, arising out of or in any way connected with
+                    your use of the Service, your violation of these Terms, or
+                    your violation of any third-party rights.
                   </p>
                 </CardContent>
               </Card>

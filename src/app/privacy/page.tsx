@@ -9,8 +9,7 @@ import {
 } from "@/components/ui/card";
 import Link from "next/link";
 
-const baseUrl =
-  process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
 export function generateMetadata(): Metadata {
   return {
@@ -86,9 +85,9 @@ export default function PrivacyPage() {
                   </p>
                   <p className="text-muted-foreground">
                     By using Quantifying Culture, you agree to the collection
-                    and use of information in accordance with this policy. If you
-                    do not agree with our policies and practices, please do not
-                    use our service.
+                    and use of information in accordance with this policy. If
+                    you do not agree with our policies and practices, please do
+                    not use our service.
                   </p>
                 </CardContent>
               </Card>
@@ -189,10 +188,12 @@ export default function PrivacyPage() {
                 <CardContent className="pt-6">
                   <ul className="list-disc space-y-2 pl-6 text-muted-foreground">
                     <li>
-                      To provide, maintain, and improve our workshop facilitation
-                      service
+                      To provide, maintain, and improve our workshop
+                      facilitation service
                     </li>
-                    <li>To process workshop creation and participant joining</li>
+                    <li>
+                      To process workshop creation and participant joining
+                    </li>
                     <li>
                       To compute cultural distances and generate diverse groups
                     </li>
@@ -204,9 +205,7 @@ export default function PrivacyPage() {
                     <li>
                       To comply with legal obligations and enforce our terms
                     </li>
-                    <li>
-                      To analyze usage patterns and improve our platform
-                    </li>
+                    <li>To analyze usage patterns and improve our platform</li>
                   </ul>
                 </CardContent>
               </Card>
@@ -221,8 +220,8 @@ export default function PrivacyPage() {
                 <CardHeader>
                   <CardTitle>Service Providers</CardTitle>
                   <CardDescription>
-                    We use third-party services to operate and improve Quantifying
-                    Culture
+                    We use third-party services to operate and improve
+                    Quantifying Culture
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -232,10 +231,11 @@ export default function PrivacyPage() {
                         Authentication:
                       </strong>{" "}
                       Clerk provides user authentication and account management
-                      services, including support for Google OAuth sign-in. Their
-                      privacy policy applies to authentication data. For detailed
-                      information about how we access and use Google user data,
-                      please see the "Google OAuth Data" section below.
+                      services, including support for Google OAuth sign-in.
+                      Their privacy policy applies to authentication data. For
+                      detailed information about how we access and use Google
+                      user data, please see the "Google OAuth Data" section
+                      below.
                     </li>
                     <li>
                       <strong className="font-semibold text-foreground">
@@ -313,12 +313,12 @@ export default function PrivacyPage() {
                           with Google
                         </li>
                         <li>
-                          User identification and profile setup within Quantifying
-                          Culture
+                          User identification and profile setup within
+                          Quantifying Culture
                         </li>
                         <li>
-                          Linking your Google account to your Quantifying Culture
-                          user account
+                          Linking your Google account to your Quantifying
+                          Culture user account
                         </li>
                         <li>
                           Storing minimal profile data (email address and
