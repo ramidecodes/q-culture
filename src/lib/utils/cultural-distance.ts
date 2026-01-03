@@ -293,9 +293,8 @@ function computeHofstedeDimensionalDistances(
       dimension: "uncertaintyAvoidance",
       label: "Uncertainty Avoidance",
       distance:
-        Math.abs(
-          scores1.uncertaintyAvoidance - scores2.uncertaintyAvoidance
-        ) / maxDiff,
+        Math.abs(scores1.uncertaintyAvoidance - scores2.uncertaintyAvoidance) /
+        maxDiff,
       sourceValue: scores1.uncertaintyAvoidance,
       targetValue: scores2.uncertaintyAvoidance,
     },
@@ -303,9 +302,8 @@ function computeHofstedeDimensionalDistances(
       dimension: "longTermOrientation",
       label: "Long-term Orientation",
       distance:
-        Math.abs(
-          scores1.longTermOrientation - scores2.longTermOrientation
-        ) / maxDiff,
+        Math.abs(scores1.longTermOrientation - scores2.longTermOrientation) /
+        maxDiff,
       sourceValue: scores1.longTermOrientation,
       targetValue: scores2.longTermOrientation,
     },
@@ -330,10 +328,14 @@ function computeCombinedDimensionalDistances(
   const dimensions: DimensionalDistance[] = [];
 
   if (scores1.lewis && scores2.lewis) {
-    dimensions.push(...computeLewisDimensionalDistances(scores1.lewis, scores2.lewis));
+    dimensions.push(
+      ...computeLewisDimensionalDistances(scores1.lewis, scores2.lewis)
+    );
   }
   if (scores1.hall && scores2.hall) {
-    dimensions.push(...computeHallDimensionalDistances(scores1.hall, scores2.hall));
+    dimensions.push(
+      ...computeHallDimensionalDistances(scores1.hall, scores2.hall)
+    );
   }
   if (scores1.hofstede && scores2.hofstede) {
     dimensions.push(

@@ -99,7 +99,8 @@ export default async function WorkshopPage({ params }: PageProps) {
               <CardHeader>
                 <CardTitle>Join Code</CardTitle>
                 <CardDescription>
-                  Share this code with participants so they can join your workshop
+                  Share this code with participants so they can join your
+                  workshop
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
@@ -113,7 +114,9 @@ export default async function WorkshopPage({ params }: PageProps) {
             <Card>
               <CardHeader>
                 <CardTitle>Workshop Details</CardTitle>
-                <CardDescription>Information about this workshop</CardDescription>
+                <CardDescription>
+                  Information about this workshop
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>

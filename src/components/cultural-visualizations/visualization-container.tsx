@@ -171,22 +171,22 @@ export function VisualizationContainer({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {(["lewis", "hall", "hofstede", "combined"] as Framework[]).map(
-                    (fw) => {
-                      const isAvailable = data.availableFrameworks.includes(fw);
-                      return (
-                        <SelectItem
-                          key={fw}
-                          value={fw}
-                          disabled={!isAvailable}
-                          className={!isAvailable ? "opacity-50" : ""}
-                        >
-                          {frameworkLabels[fw]}
-                          {!isAvailable && " (unavailable)"}
-                        </SelectItem>
-                      );
-                    }
-                  )}
+                  {(
+                    ["lewis", "hall", "hofstede", "combined"] as Framework[]
+                  ).map((fw) => {
+                    const isAvailable = data.availableFrameworks.includes(fw);
+                    return (
+                      <SelectItem
+                        key={fw}
+                        value={fw}
+                        disabled={!isAvailable}
+                        className={!isAvailable ? "opacity-50" : ""}
+                      >
+                        {frameworkLabels[fw]}
+                        {!isAvailable && " (unavailable)"}
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
             </div>

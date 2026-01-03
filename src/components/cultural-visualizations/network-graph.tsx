@@ -16,6 +16,7 @@ import type { Framework } from "@/types/cultural";
 import { cn } from "@/lib/utils";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { X } from "lucide-react";
 
 // Dynamic import with ssr: false is necessary because react-force-graph-2d
 // uses browser-only APIs (Canvas, D3) that don't exist during server-side rendering.
@@ -76,15 +77,16 @@ export function NetworkGraph({
   const graphRef = useRef<ForceGraphMethods | undefined>(undefined);
   const containerRef = useRef<HTMLDivElement>(null);
   const [hoveredNode, setHoveredNode] = useState<GraphNode | null>(null);
+  const [hoveredLink, setHoveredLink] = useState<LibraryLink | null>(null);
   const [dimensions, setDimensions] = useState({ width: 800, height: 450 });
   const [edgeMode, setEdgeMode] = useState<"aggregate" | "dimensional">(
     "aggregate"
   );
-  const [tooltip, setTooltip] = useState<{
+  const [selectedElement, setSelectedElement] = useState<{
     type: "node" | "edge";
-    content: React.ReactNode;
-    x: number;
-    y: number;
+    node?: GraphNode;
+    link?: LibraryLink;
+    position: { x: number; y: number };
   } | null>(null);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
@@ -347,6 +349,7 @@ export function NetworkGraph({
           dimension?: string;
           dimensionLabel?: string;
         };
+      const isHovered = hoveredLink === link;
 
       // In dimensional mode, use dimension color
       if (edgeMode === "dimensional" && graphLink.dimension && framework) {
@@ -359,10 +362,14 @@ export function NetworkGraph({
         const normalized = linkDistance;
         const inverseNormalized = 1 - normalized;
         // Strong connections (close) = more opaque
-        const opacity = Math.max(
+        let opacity = Math.max(
           0.3,
           Math.min(0.9, 0.4 + inverseNormalized * 0.5)
         );
+        // Increase opacity when hovered
+        if (isHovered) {
+          opacity = Math.min(1, opacity * 1.3);
+        }
         // Convert hex to rgba
         const r = parseInt(dimensionColor.slice(1, 3), 16);
         const g = parseInt(dimensionColor.slice(3, 5), 16);
@@ -376,14 +383,16 @@ export function NetworkGraph({
       const normalized = linkDistance / maxDistance;
       const inverseNormalized = 1 - normalized;
       // Strong connections (close) = darker and more opaque
-      const opacity = Math.max(
-        0.2,
-        Math.min(0.9, 0.3 + inverseNormalized * 0.6)
-      );
-      const lightness = Math.max(20, 100 - inverseNormalized * 60);
+      let opacity = Math.max(0.2, Math.min(0.9, 0.3 + inverseNormalized * 0.6));
+      let lightness = Math.max(20, 100 - inverseNormalized * 60);
+      // Brighten when hovered
+      if (isHovered) {
+        opacity = Math.min(1, opacity * 1.4);
+        lightness = Math.min(100, lightness + 30);
+      }
       return `hsl(0, 0%, ${lightness}%, ${opacity})`;
     },
-    [maxDistance, edgeMode, framework, getDimensionColor]
+    [maxDistance, edgeMode, framework, getDimensionColor, hoveredLink]
   );
 
   /**
@@ -407,41 +416,71 @@ export function NetworkGraph({
     (link: LibraryLink): number => {
       const graphLink = link as LibraryLink & Partial<GraphLink>;
       const linkDistance = graphLink.distance ?? 0;
+      const isHovered = hoveredLink === link;
 
+      let baseWidth: number;
       if (edgeMode === "dimensional") {
         // In dimensional mode, use normalized distance (already 0-1)
         const normalized = linkDistance;
         const inverseNormalized = 1 - normalized;
         // Thinner edges in dimensional mode to avoid overlap
-        return Math.max(0.5, Math.min(3, 0.5 + inverseNormalized * 2.5));
+        baseWidth = Math.max(0.5, Math.min(3, 0.5 + inverseNormalized * 2.5));
+      } else {
+        // Aggregate mode
+        // Invert: close distance = thick, far distance = thin
+        const normalized = linkDistance / maxDistance;
+        const inverseNormalized = 1 - normalized;
+        // Strong connections (close) = thicker edges
+        baseWidth = Math.max(0.5, Math.min(5, 1 + inverseNormalized * 4));
       }
 
-      // Aggregate mode
-      // Invert: close distance = thick, far distance = thin
-      const normalized = linkDistance / maxDistance;
-      const inverseNormalized = 1 - normalized;
-      // Strong connections (close) = thicker edges
-      return Math.max(0.5, Math.min(5, 1 + inverseNormalized * 4));
+      return isHovered ? baseWidth * 1.8 : baseWidth;
     },
-    [maxDistance, edgeMode]
+    [maxDistance, edgeMode, hoveredLink]
   );
 
   const handleNodeClick = useCallback(
     (node: LibraryNode) => {
-      if (isGraphNode(node)) {
-        onNodeClick?.(toGraphNode(node));
+      if (!isGraphNode(node)) return;
+
+      const nodeId = String(node.id ?? "");
+      // Find the full node data from data.nodes to get culturalScores
+      const fullNode = data.nodes.find((n) => n.id === nodeId);
+      if (!fullNode) return;
+
+      // Toggle off if clicking the same node
+      if (
+        selectedElement?.type === "node" &&
+        selectedElement.node?.id === fullNode.id
+      ) {
+        setSelectedElement(null);
+        onNodeClick?.(fullNode);
+        return;
       }
+
+      // Get screen coordinates for tooltip positioning
+      const screenCoords =
+        node.x !== undefined && node.y !== undefined && graphRef.current
+          ? graphRef.current.graph2ScreenCoords(node.x, node.y)
+          : null;
+
+      setSelectedElement({
+        type: "node",
+        node: fullNode,
+        position: { x: screenCoords?.x ?? 0, y: screenCoords?.y ?? 0 },
+      });
+
+      onNodeClick?.(fullNode);
     },
-    [onNodeClick]
+    [selectedElement, onNodeClick, data.nodes]
   );
 
   // Format node tooltip content as React component
   const formatNodeTooltip = useCallback(
-    (node: LibraryNode): React.ReactNode => {
-      const n = node as LibraryNode & Partial<GraphNode>;
-      const name = n.name ?? "";
-      const country = n.country ?? "";
-      const scores = n.culturalScores;
+    (node: GraphNode): React.ReactNode => {
+      const name = node.name ?? "";
+      const country = node.country ?? "";
+      const scores = node.culturalScores;
 
       if (!scores || !framework) {
         return (
@@ -496,9 +535,7 @@ export function NetworkGraph({
             key="longTermOrientation"
             className="flex justify-between text-xs"
           >
-            <span className="text-muted-foreground">
-              Long-term Orientation
-            </span>
+            <span className="text-muted-foreground">Long-term Orientation</span>
             <span className="font-mono font-medium text-foreground">
               {scores.hofstede.longTermOrientation}
             </span>
@@ -566,7 +603,10 @@ export function NetworkGraph({
         // Show all available frameworks
         if (scores.hofstede) {
           scoreItems.push(
-            <div key="hofstede-header" className="text-xs font-medium text-muted-foreground mt-2 first:mt-0">
+            <div
+              key="hofstede-header"
+              className="text-xs font-medium text-muted-foreground mt-2 first:mt-0"
+            >
               Hofstede
             </div>
           );
@@ -599,7 +639,9 @@ export function NetworkGraph({
               key="uncertaintyAvoidance"
               className="flex justify-between text-xs"
             >
-              <span className="text-muted-foreground">Uncertainty Avoidance</span>
+              <span className="text-muted-foreground">
+                Uncertainty Avoidance
+              </span>
               <span className="font-mono font-medium text-foreground">
                 {scores.hofstede.uncertaintyAvoidance}
               </span>
@@ -629,7 +671,10 @@ export function NetworkGraph({
         }
         if (scores.lewis) {
           scoreItems.push(
-            <div key="lewis-header" className="text-xs font-medium text-muted-foreground mt-2 first:mt-0">
+            <div
+              key="lewis-header"
+              className="text-xs font-medium text-muted-foreground mt-2 first:mt-0"
+            >
               Lewis
             </div>
           );
@@ -660,7 +705,10 @@ export function NetworkGraph({
         }
         if (scores.hall) {
           scoreItems.push(
-            <div key="hall-header" className="text-xs font-medium text-muted-foreground mt-2 first:mt-0">
+            <div
+              key="hall-header"
+              className="text-xs font-medium text-muted-foreground mt-2 first:mt-0"
+            >
               Hall
             </div>
           );
@@ -717,29 +765,12 @@ export function NetworkGraph({
         const graphNode = toGraphNode(node);
         setHoveredNode(graphNode);
         onNodeHover?.(graphNode);
-
-        // Transform graph coordinates to screen coordinates
-        if (node.x !== undefined && node.y !== undefined && graphRef.current) {
-          const screenCoords = graphRef.current.graph2ScreenCoords(
-            node.x,
-            node.y
-          );
-          if (screenCoords) {
-            setTooltip({
-              type: "node",
-              content: formatNodeTooltip(node),
-              x: screenCoords.x,
-              y: screenCoords.y,
-            });
-          }
-        }
       } else {
         setHoveredNode(null);
         onNodeHover?.(null);
-        setTooltip(null);
       }
     },
-    [onNodeHover, formatNodeTooltip]
+    [onNodeHover]
   );
 
   // Disable native tooltips - we use custom tooltips instead
@@ -768,6 +799,28 @@ export function NetworkGraph({
 
   const handleEngineStop = useCallback(() => {
     graphRef.current?.zoomToFit(400);
+  }, []);
+
+  const handleLinkClick = useCallback(
+    (link: LibraryLink) => {
+      // Toggle off if clicking the same link
+      if (selectedElement?.type === "edge" && selectedElement.link === link) {
+        setSelectedElement(null);
+        return;
+      }
+
+      // Position at mouse location
+      setSelectedElement({
+        type: "edge",
+        link,
+        position: { x: mousePosition.x, y: mousePosition.y },
+      });
+    },
+    [selectedElement, mousePosition]
+  );
+
+  const handleBackgroundClick = useCallback(() => {
+    setSelectedElement(null);
   }, []);
 
   // Format edge tooltip content as React component
@@ -894,10 +947,23 @@ export function NetworkGraph({
   const renderNode = useCallback(
     (node: LibraryNode, ctx: CanvasRenderingContext2D, globalScale: number) => {
       const graphNode = toGraphNode(node);
+      const nodeId = String(node.id ?? "");
       const label = graphNode.name || "";
       const fontSize = 12 / globalScale;
       const nodeSize = 6;
       const nodeColor = getNodeColor(node);
+      const isHovered = hoveredNode?.id === nodeId;
+      const isSelected =
+        selectedElement?.type === "node" && selectedElement.node?.id === nodeId;
+
+      // Draw highlight ring when hovered or selected (before the node)
+      if (isHovered || isSelected) {
+        ctx.beginPath();
+        ctx.arc(node.x ?? 0, node.y ?? 0, nodeSize + 3, 0, 2 * Math.PI);
+        ctx.strokeStyle = isSelected ? "#3b82f6" : "#ffffff";
+        ctx.lineWidth = 2 / globalScale;
+        ctx.stroke();
+      }
 
       // Draw node circle
       ctx.beginPath();
@@ -918,7 +984,7 @@ export function NetworkGraph({
         ctx.fillText(label, node.x ?? 0, (node.y ?? 0) + nodeSize + 2);
       }
     },
-    [getNodeColor]
+    [getNodeColor, hoveredNode, selectedElement]
   );
 
   return (
@@ -969,31 +1035,41 @@ export function NetworkGraph({
         style={{ aspectRatio: "16/9", minHeight: "500px" }}
       >
         {/* Custom Tooltip */}
-        {tooltip && (
+        {selectedElement && (
           <div
-            className="absolute z-50 pointer-events-none"
+            className="absolute z-50"
             style={{
-              left: `${tooltip.x}px`,
-              top: `${tooltip.y}px`,
+              left: `${selectedElement.position.x}px`,
+              top: `${selectedElement.position.y}px`,
               transform:
-                tooltip.type === "node"
-                  ? "translate(-50%, calc(-100% - 12px))"
+                selectedElement.type === "node"
+                  ? "translate(-50%, calc(-100% - 16px))"
                   : "translate(12px, -50%)",
             }}
           >
-            <div className="bg-popover border border-border rounded-lg shadow-lg p-3 text-sm max-w-xs min-w-[200px]">
-              {tooltip.content}
+            <div className="bg-popover border border-border rounded-lg shadow-xl p-3 text-sm max-w-xs min-w-[220px] animate-in fade-in-0 zoom-in-95 duration-150">
+              {/* Close button */}
+              <button
+                type="button"
+                onClick={() => setSelectedElement(null)}
+                className="absolute -top-2 -right-2 h-5 w-5 rounded-full bg-muted border border-border flex items-center justify-center hover:bg-accent transition-colors z-10"
+                aria-label="Close tooltip"
+              >
+                <X className="h-3 w-3" />
+              </button>
+
+              {selectedElement.type === "node" && selectedElement.node
+                ? formatNodeTooltip(selectedElement.node)
+                : selectedElement.link &&
+                  formatEdgeTooltip(selectedElement.link)}
             </div>
             {/* Tooltip arrow */}
             <div
               className="absolute w-2 h-2 bg-popover border-r border-b border-border"
               style={{
-                left: tooltip.type === "node" ? "50%" : "0px",
-                top: tooltip.type === "node" ? "100%" : "50%",
-                transform:
-                  tooltip.type === "node"
-                    ? "translate(-50%, -50%) rotate(45deg)"
-                    : "translate(-50%, -50%) rotate(45deg)",
+                left: selectedElement.type === "node" ? "50%" : "0px",
+                top: selectedElement.type === "node" ? "100%" : "50%",
+                transform: "translate(-50%, -50%) rotate(45deg)",
               }}
             />
           </div>
@@ -1050,18 +1126,11 @@ export function NetworkGraph({
           }}
           onNodeClick={handleNodeClick}
           onNodeHover={handleNodeHover}
+          onLinkClick={handleLinkClick}
           onLinkHover={(link: LibraryLink | null) => {
-            if (link) {
-              setTooltip({
-                type: "edge",
-                content: formatEdgeTooltip(link),
-                x: mousePosition.x,
-                y: mousePosition.y,
-              });
-            } else {
-              setTooltip(null);
-            }
+            setHoveredLink(link);
           }}
+          onBackgroundClick={handleBackgroundClick}
           cooldownTicks={100}
           onEngineStop={handleEngineStop}
           backgroundColor="transparent"

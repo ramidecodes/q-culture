@@ -134,7 +134,9 @@ export function WorkshopList({ workshops }: WorkshopListProps) {
                   {workshop.date && (
                     <div className="flex items-center gap-1">
                       <Calendar className="h-4 w-4" />
-                      <span>{new Date(workshop.date).toLocaleDateString()}</span>
+                      <span>
+                        {new Date(workshop.date).toLocaleDateString()}
+                      </span>
                     </div>
                   )}
                   <div className="flex items-center gap-1">
@@ -152,7 +154,8 @@ export function WorkshopList({ workshops }: WorkshopListProps) {
                     Framework:{" "}
                     {workshop.framework.charAt(0).toUpperCase() +
                       workshop.framework.slice(1)}
-                    {workshop.groupSize && ` • Group size: ${workshop.groupSize}`}
+                    {workshop.groupSize &&
+                      ` • Group size: ${workshop.groupSize}`}
                   </CardDescription>
                 )}
               </CardContent>

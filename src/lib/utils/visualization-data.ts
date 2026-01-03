@@ -120,10 +120,7 @@ export function transformDistanceMatrixToGraph(
               );
             } catch (error) {
               // If dimensional computation fails, just omit it
-              console.warn(
-                "Failed to compute dimensional distances:",
-                error
-              );
+              console.warn("Failed to compute dimensional distances:", error);
             }
           }
         }

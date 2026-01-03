@@ -29,6 +29,7 @@ q-culture/
 The `docs/` directory contains project documentation and feature specifications:
 
 - **`base-project.md`** - Main project documentation with PRD and FREDs (Feature Requirement Documents)
+- **`ALGORITHMS.md`** - Explanation of cultural distance calculations and grouping algorithms
 - **`features/`** - Individual feature requirement documents:
   - **`implemented/`** - Documentation for completed features
   - Feature-specific FREDs (workshop creation, participant management, grouping, workshop management, etc.)
@@ -56,12 +57,16 @@ Next.js App Router structure defining the application's routes and pages:
     - **`reflections/page.tsx`** - Participant reflections review page
     - **`not-found.tsx`** - Workshop not found page
 - **`join/[code]/page.tsx`** - Participant join page (public route)
-- **`participant/[token]/page.tsx`** - Participant view page (public route)
+- **`participant/[token]/`** - Participant area
+  - **`page.tsx`** - Participant view page
+  - **`reflect/page.tsx`** - Reflection submission page
 - **`sign-in/[[...sign-in]]/page.tsx`** - Authentication sign-in page (Clerk)
 - **`sign-up/[[...sign-up]]/page.tsx`** - Authentication sign-up page (Clerk)
 - **`api/`** - API route handlers
+  - **`participant/[token]/group/route.ts`** - Get participant's group assignment
   - **`workshop/[id]/`** - Workshop-related API endpoints
     - **`country-distribution/route.ts`** - Get country distribution for a workshop
+    - **`distance-matrix/route.ts`** - Get distance matrix for cultural visualization
     - **`participants/route.ts`** - Get participants for a workshop
 
 ### Components (`src/components/`)
@@ -71,6 +76,13 @@ Reusable React components organized by purpose:
 - **`ui/`** - ShadCN UI component library (buttons, forms, dialogs, etc.)
   - `badge.tsx`, `button.tsx`, `card.tsx`, `dialog.tsx`, `form.tsx`, `input.tsx`, `label.tsx`, `radio-group.tsx`, `select.tsx`, `separator.tsx`, `tabs.tsx`, `textarea.tsx`
 - **`auth-controls.tsx`** - Authentication UI controls
+- **`cultural-visualizations/`** - Visualization components
+  - `distance-matrix-heatmap.tsx` - Heatmap visualization of cultural distances
+  - `network-graph.tsx` - Force-directed graph visualization
+  - `visualization-container.tsx` - Container handling data loading and state
+  - `visualization-skeleton.tsx` - Loading state for visualizations
+  - `visualization-view.tsx` - Tabbed view switching between Graph and Heatmap
+  - `visualization-wrapper.tsx` - Wrapper component for error handling and layout
 - **`country-distribution.tsx`** - Country distribution visualization component
 - **`country-select.tsx`** - Country selection dropdown component
 - **`generate-groups-button.tsx`** - Button component for triggering group generation
@@ -118,8 +130,10 @@ Core application logic and utilities:
   - **`country-flag.ts`** - Country flag emoji utilities
   - **`cultural-distance.ts`** - Cultural distance computation algorithms
   - **`distance-matrix.ts`** - Distance matrix generation utilities
+  - **`framework-availability.ts`** - Checks for available cultural data
   - **`group-assignment.ts`** - Group assignment algorithm implementations
   - **`join-code.ts`** - Workshop join code generation and validation
+  - **`visualization-data.ts`** - Data transformation for visualizations
 
 ### Types (`src/types/`)
 
