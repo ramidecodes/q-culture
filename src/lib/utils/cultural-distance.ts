@@ -109,30 +109,65 @@ function computeHofstedeDistance(
 }
 
 /**
+ * Maximum theoretical distances for each framework (√dimensions)
+ * Used for normalizing distances to [0,1] range before averaging
+ */
+const MAX_FRAMEWORK_DISTANCES = {
+  lewis: Math.sqrt(3), // ≈ 1.732
+  hall: Math.sqrt(3), // ≈ 1.732
+  hofstede: Math.sqrt(6), // ≈ 2.449
+} as const;
+
+/**
  * Computes distance using combined framework (all available frameworks weighted equally)
+ * Normalizes each framework's distance to [0,1] range before averaging to ensure
+ * equal contribution regardless of dimension count.
  */
 function computeCombinedDistance(
   scores1: CulturalScores,
   scores2: CulturalScores
 ): number {
-  const distances: number[] = [];
+  const distances: Array<{ distance: number; maxDist: number }> = [];
 
   if (scores1.lewis && scores2.lewis) {
-    distances.push(computeLewisDistance(scores1.lewis, scores2.lewis));
+    const distance = computeLewisDistance(scores1.lewis, scores2.lewis);
+    distances.push({
+      distance,
+      maxDist: MAX_FRAMEWORK_DISTANCES.lewis,
+    });
   }
   if (scores1.hall && scores2.hall) {
-    distances.push(computeHallDistance(scores1.hall, scores2.hall));
+    const distance = computeHallDistance(scores1.hall, scores2.hall);
+    distances.push({
+      distance,
+      maxDist: MAX_FRAMEWORK_DISTANCES.hall,
+    });
   }
   if (scores1.hofstede && scores2.hofstede) {
-    distances.push(computeHofstedeDistance(scores1.hofstede, scores2.hofstede));
+    const distance = computeHofstedeDistance(
+      scores1.hofstede,
+      scores2.hofstede
+    );
+    distances.push({
+      distance,
+      maxDist: MAX_FRAMEWORK_DISTANCES.hofstede,
+    });
   }
 
   if (distances.length === 0) {
     throw new Error("No cultural scores available for combined calculation");
   }
 
-  // Average of all framework distances (equal weighting)
-  return distances.reduce((sum, d) => sum + d, 0) / distances.length;
+  // Normalize each distance to [0,1] range before averaging
+  const normalizedDistances = distances.map(
+    (d) => d.distance / d.maxDist
+  );
+
+  // Average the normalized distances (equal weighting)
+  return (
+    normalizedDistances.reduce((sum, d) => sum + d, 0) /
+    normalizedDistances.length
+  );
 }
 
 /**

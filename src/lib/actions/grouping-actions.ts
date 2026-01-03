@@ -190,7 +190,8 @@ export async function generateWorkshopGroups(
     generatedGroups = generateGroups(
       participantsWithScores,
       framework,
-      workshop.groupSize
+      workshop.groupSize,
+      workshopId // Pass workshop ID for GA seeding
     );
   } catch (error) {
     console.error("Error generating groups:", error);
